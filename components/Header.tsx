@@ -1,13 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 import { useState } from "react";
 import { useCart } from "@/context/CartContext";
 import CartDrawer from "./CartDrawer";
 
 export default function Header() {
   const [cartOpen, setCartOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const { cart } = useCart();
+  const { user, logout } = useAuth();
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -35,14 +39,14 @@ export default function Header() {
           {/* Right Icons */}
           <div className="flex items-center gap-6 text-gray-700">
 
-            {/* Search Icon */}
+            {/* Search */}
             <button className="hover:text-black transition cursor-pointer">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" />
               </svg>
             </button>
 
-            {/* Cart Icon */}
+            {/* Cart */}
             <button
               onClick={() => setCartOpen(true)}
               className="relative hover:text-black transition cursor-pointer"
@@ -58,18 +62,48 @@ export default function Header() {
               )}
             </button>
 
-            {/* User Icon */}
-            <button className="hover:text-black transition cursor-pointer">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20.25a7.5 7.5 0 0 1 15 0" />
-              </svg>
-            </button>
+            {/* USER / LOGIN */}
+            <div className="relative">
+              {user ? (
+                <>
+                  <button
+                    onClick={() => setMenuOpen(!menuOpen)}
+                    className="cursor-pointer"
+                  >
+                    <img
+                      src={user.photoURL || "/avatar.png"}
+                      className="w-8 h-8 rounded-full border"
+                      alt="Profile"
+                    />
+                  </button>
+
+                  {menuOpen && (
+                    <div className="absolute right-0 mt-3 w-40 bg-white shadow-lg rounded-lg border py-2 text-sm">
+                      <p className="px-4 py-2 text-gray-500 border-b">
+                        {user.displayName || user.email}
+                      </p>
+                      <button
+                        onClick={logout}
+                        className="w-full text-left px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <Link href="/login" className="hover:text-black transition cursor-pointer">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20.25a7.5 7.5 0 0 1 15 0" />
+                  </svg>
+                </Link>
+              )}
+            </div>
 
           </div>
         </div>
       </header>
 
-      {/* Cart Drawer */}
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
     </>
   );

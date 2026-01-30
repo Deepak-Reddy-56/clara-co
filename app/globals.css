@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+.input {
+  @apply w-full border p-3 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black/20;
+}
+
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -48,4 +53,23 @@ button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
+}
+
+.input {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  padding: 12px;
+  border-radius: 10px;
+  outline: none;
+  background: white;
+  color: #111827;
+}
+
+.input:focus {
+  border-color: black;
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.08);
+}
+
+html {
+  scroll-behavior: smooth;
 }

@@ -1,6 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 import { getAnalytics, isSupported } from "firebase/analytics";
 
 const firebaseConfig = {
@@ -19,7 +20,9 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 // ✅ Auth works everywhere (client + server)
 export const auth = getAuth(app);
 
-// ✅ Analytics ONLY in browser
+export const db = getFirestore(app);
+
+// 📊 Analytics (browser only)
 if (typeof window !== "undefined") {
   isSupported().then((yes) => {
     if (yes) {

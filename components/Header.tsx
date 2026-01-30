@@ -8,8 +8,6 @@ import CartDrawer from "./CartDrawer";
 
 export default function Header() {
   const [cartOpen, setCartOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-
   const { cart } = useCart();
   const { user, logout } = useAuth();
 
@@ -39,14 +37,14 @@ export default function Header() {
           {/* Right Icons */}
           <div className="flex items-center gap-6 text-gray-700">
 
-            {/* Search */}
+            {/* Search Icon */}
             <button className="hover:text-black transition cursor-pointer">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" />
               </svg>
             </button>
 
-            {/* Cart */}
+            {/* Cart Icon */}
             <button
               onClick={() => setCartOpen(true)}
               className="relative hover:text-black transition cursor-pointer"
@@ -62,43 +60,46 @@ export default function Header() {
               )}
             </button>
 
-            {/* USER / LOGIN */}
-            <div className="relative">
-              {user ? (
-                <>
-                  <button
-                    onClick={() => setMenuOpen(!menuOpen)}
-                    className="cursor-pointer"
-                  >
-                    <img
-                      src={user.photoURL || "/avatar.png"}
-                      className="w-8 h-8 rounded-full border"
-                      alt="Profile"
-                    />
-                  </button>
+            {/* Profile / Login */}
+            {user ? (
+              <div className="relative group">
+                <img
+                  src={user.photoURL || "/avatar.png"}
+                  className="w-9 h-9 rounded-full cursor-pointer border"
+                  alt="Profile"
+                />
 
-                  {menuOpen && (
-                    <div className="absolute right-0 mt-3 w-40 bg-white shadow-lg rounded-lg border py-2 text-sm">
-                      <p className="px-4 py-2 text-gray-500 border-b">
-                        {user.displayName || user.email}
-                      </p>
-                      <button
-                        onClick={logout}
-                        className="w-full text-left px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                      >
-                        Logout
-                      </button>
-                    </div>
+                {/* Dropdown */}
+                <div className="absolute right-0 mt-3 w-48 bg-white border rounded-lg shadow-lg opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 z-50">
+
+                  {/* 👑 Admin Dashboard Link */}
+                  {user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL && (
+                    <Link
+                      href="/admin"
+                      className="block px-4 py-2 text-sm text-indigo-600 font-semibold hover:bg-gray-100"
+                    >
+                      Admin Dashboard
+                    </Link>
                   )}
-                </>
-              ) : (
-                <Link href="/login" className="hover:text-black transition cursor-pointer">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20.25a7.5 7.5 0 0 1 15 0" />
-                  </svg>
-                </Link>
-              )}
-            </div>
+
+                  <Link
+                    href="/account"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    My Account
+                  </Link>
+
+                  <button
+                    onClick={logout}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <Link href="/login" className="hover:text-black">Login</Link>
+            )}
 
           </div>
         </div>

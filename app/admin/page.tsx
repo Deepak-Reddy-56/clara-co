@@ -1,18 +1,43 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { Product } from "@/lib/products";
 
 export default function AdminPage() {
+  const router = useRouter();
+  const { user, loading } = useAuth();
+  const [authorized, setAuthorized] = useState(false);
   const [draftProducts, setDraftProducts] = useState<Product[]>([]);
 
-  // Load products from API
+  // 🔐 Check if logged-in user is the admin
   useEffect(() => {
+    if (loading) return;
+
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    if (user.email !== process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
+      router.push("/");
+      return;
+    }
+
+    setAuthorized(true);
+  }, [user, loading, router]);
+
+  // 📦 Load products AFTER auth is confirmed
+  useEffect(() => {
+    if (!authorized) return;
+
     fetch("/api/products")
       .then((res) => res.json())
       .then((data) => setDraftProducts(data));
-  }, []);
+  }, [authorized]);
+
+  if (!authorized) return null; // prevents flicker & unauthorized view
 
   const updateField = (id: number, field: keyof Product, value: any) => {
     setDraftProducts((prev) =>
@@ -61,57 +86,29 @@ export default function AdminPage() {
     alert("Changes saved!");
   };
 
-  const router = useRouter();
-    useEffect(() => {
-  const isAdmin = localStorage.getItem("admin-auth");
-  const loginTime = localStorage.getItem("admin-login-time");
-
-  if (!isAdmin || !loginTime) {
-    router.push("/secure-admin");
-    return;
-  }
-
-  const ONE_HOUR = 60 * 60 * 1000;
-  if (Date.now() - Number(loginTime) > ONE_HOUR) {
-    localStorage.removeItem("admin-auth");
-    localStorage.removeItem("admin-login-time");
-    router.push("/secure-admin");
-  }
-}, []);
-
-
-    const logout = () => {
-      localStorage.removeItem("admin-auth");
-      router.push("/secure-admin");
-    };
-
-
   return (
     <main className="min-h-screen bg-gray-50 px-6 py-12 text-gray-800">
-      <h1 className="text-4xl font-bold mb-6">Admin Product Catalog</h1>
-
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-4xl font-bold">Admin Product Catalog</h1>
         <button
-          onClick={logout}
-          className="text-sm bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded"
+          onClick={() => router.push("/")}
+          className="text-sm bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded cursor-pointer"
         >
-          Logout
+          Exit Admin
         </button>
       </div>
-
 
       <div className="flex gap-4 mb-8">
         <button
           onClick={addProduct}
-          className="bg-black text-white px-6 py-2 rounded-lg"
+          className="bg-black text-white px-6 py-2 rounded-lg cursor-pointer"
         >
           + Add Product
         </button>
 
         <button
           onClick={saveChanges}
-          className="bg-green-600 text-white px-6 py-2 rounded-lg"
+          className="bg-green-600 text-white px-6 py-2 rounded-lg cursor-pointer"
         >
           Save Changes
         </button>
@@ -124,15 +121,14 @@ export default function AdminPage() {
             className="bg-white p-6 rounded-xl shadow-sm flex gap-6"
           >
             <img
-            src={
-              product.image && product.image.trim() !== ""
-              ? product.image
-              : "https://via.placeholder.com/150?text=No+Image"
-            }
-            alt={product.name}
-            className="w-28 h-28 object-cover rounded-lg"
+              src={
+                product.image && product.image.trim() !== ""
+                  ? product.image
+                  : "https://via.placeholder.com/150?text=No+Image"
+              }
+              alt={product.name}
+              className="w-28 h-28 object-cover rounded-lg"
             />
-
 
             <div className="flex-1 space-y-3">
               <input
@@ -184,26 +180,21 @@ export default function AdminPage() {
               </div>
 
               <div className="flex gap-3 flex-wrap">
-                {[
-                  "new-arrivals",
-                  "top-selling",
-                  "casual",
-                  "formal",
-                  "party",
-                  "gym",
-                ].map((section) => (
-                  <button
-                    key={section}
-                    onClick={() => toggleSection(product.id, section)}
-                    className={`px-3 py-1 rounded-full text-sm border ${
-                      product.sections?.includes(section as any)
-                        ? "bg-black text-white border-black"
-                        : "bg-white text-gray-700 border-gray-300"
-                    }`}
-                  >
-                    {section}
-                  </button>
-                ))}
+                {["new-arrivals", "top-selling", "casual", "formal", "party", "gym"].map(
+                  (section) => (
+                    <button
+                      key={section}
+                      onClick={() => toggleSection(product.id, section)}
+                      className={`px-3 py-1 rounded-full text-sm border cursor-pointer ${
+                        product.sections?.includes(section as any)
+                          ? "bg-black text-white border-black"
+                          : "bg-white text-gray-700 border-gray-300"
+                      }`}
+                    >
+                      {section}
+                    </button>
+                  )
+                )}
               </div>
 
               <label className="flex items-center gap-2 text-sm">
@@ -219,7 +210,7 @@ export default function AdminPage() {
 
               <button
                 onClick={() => deleteProduct(product.id)}
-                className="text-red-600 text-sm"
+                className="text-red-600 text-sm cursor-pointer"
               >
                 Delete Product
               </button>

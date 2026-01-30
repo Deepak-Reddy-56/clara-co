@@ -9,7 +9,8 @@
     "sections": [
       "new-arrivals",
       "casual",
-      "formal"
+      "formal",
+      "top-selling"
     ],
     "discount": 15
   }

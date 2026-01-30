@@ -14,9 +14,20 @@ export default function Home() {
       <Header />
       <Hero />
       <BrandStrip />
-      <NewArrivals />
-      <TopSelling />
-      <BrowseByStyle />
+
+      {/* 👇 ADD IDs HERE */}
+      <section id="new-arrivals">
+        <NewArrivals />
+      </section>
+
+      <section id="top-selling">
+        <TopSelling />
+      </section>
+
+      <section id="browse-style">
+        <BrowseByStyle />
+      </section>
+
       <Testimonials />
       <Newsletter />
       <Footer />

@@ -8,9 +8,7 @@
     "inStock": true,
     "sections": [
       "new-arrivals",
-      "casual",
-      "formal",
-      "top-selling"
+      "formal"
     ],
     "discount": 15
   }

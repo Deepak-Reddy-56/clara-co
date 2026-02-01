@@ -5,6 +5,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useState } from "react";
 import { useCart } from "@/context/CartContext";
 import CartDrawer from "./CartDrawer";
+import Image from "next/image";
+
 
 export default function Header() {
   const [cartOpen, setCartOpen] = useState(false);
@@ -63,10 +65,13 @@ export default function Header() {
             {/* Profile / Login */}
             {user ? (
               <div className="relative group">
-                <img
+                
+                <Image
                   src={user.photoURL || "/avatar.png"}
-                  className="w-9 h-9 rounded-full cursor-pointer border"
                   alt="Profile"
+                  width={36}
+                  height={36}
+                  className="rounded-full border cursor-pointer"
                 />
 
                 {/* Dropdown */}

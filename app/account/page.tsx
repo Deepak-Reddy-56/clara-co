@@ -5,12 +5,16 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import Image from "next/image";
 
 export default function AccountPage() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  
+
 
   // 🔒 Redirect if not logged in
   useEffect(() => {
@@ -65,10 +69,13 @@ export default function AccountPage() {
           <h2 className="text-2xl font-bold mb-6">Account</h2>
 
           <div className="flex items-center gap-6">
-            <img
+            
+            <Image
               src={user.photoURL || "/avatar.png"}
-              className="w-20 h-20 rounded-full object-cover border"
-              alt="User Avatar"
+                alt="User Avatar"
+                width={80}
+                height={80}
+                className="rounded-full border object-cover"
             />
 
             <div className="space-y-1">
@@ -77,6 +84,7 @@ export default function AccountPage() {
             </div>
           </div>
         </div>
+
 
         {/* 🔧 ACTION BUTTONS (ADMIN + LOGOUT) */}
         <div className="flex flex-wrap gap-4">

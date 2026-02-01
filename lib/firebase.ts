@@ -5,13 +5,13 @@ import { getFirestore } from "firebase/firestore";
 import { getAnalytics, isSupported } from "firebase/analytics";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBXyYvllP9QFn4Rk0QUGKc7fTJbtVQk_oo",
-  authDomain: "claraandco-3001.firebaseapp.com",
-  projectId: "claraandco-3001",
-  storageBucket: "claraandco-3001.firebasestorage.app",
-  messagingSenderId: "590875417879",
-  appId: "1:590875417879:web:9749de1533f2d027f42b52",
-  measurementId: "G-BE09LMC3PH"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.
 };
 
 // Prevent re-initializing Firebase in dev (Next.js fast refresh)

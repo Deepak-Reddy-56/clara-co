@@ -15,6 +15,8 @@ export default function LoginPage() {
 
     try {
       const provider = new GoogleAuthProvider();
+      provider.addScope("profile");
+      provider.addScope("email");
       await signInWithPopup(auth, provider);
       router.push("/");
     } catch (err: any) {

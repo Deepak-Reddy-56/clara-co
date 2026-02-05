@@ -5,7 +5,24 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
+
+type Address = {
+  id: string;
+  fullName?: string;
+  phone?: string;
+  street?: string;
+  city?: string;
+  postal?: string;
+  isDefault?: boolean;
+};
 
 export default function CheckoutPage() {
   const { cart, clearCart } = useCart();
@@ -13,6 +30,8 @@ export default function CheckoutPage() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState("");
 
   const [form, setForm] = useState({
     name: "",
@@ -20,43 +39,108 @@ export default function CheckoutPage() {
     address: "",
     city: "",
     zip: "",
+    phone: "",
   });
 
+  // 🔒 Redirect if not logged in
   useEffect(() => {
     if (!user) router.push("/login");
   }, [user, router]);
+
+  // 📥 Load saved addresses
+  useEffect(() => {
+    const loadAddresses = async () => {
+      if (!user) return;
+
+      const q = query(collection(db, "addresses"), where("userId", "==", user.uid));
+      const snapshot = await getDocs(q);
+
+      const data: Address[] = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as Omit<Address, "id">),
+      }));
+
+      setAddresses(data);
+
+      const defaultAddr = data.find((a) => a.isDefault);
+      if (defaultAddr) selectAddress(defaultAddr);
+      else setForm((prev) => ({ ...prev, email: user.email || "" }));
+    };
+
+    loadAddresses();
+  }, [user]);
+
+  const selectAddress = (addr: Address) => {
+    setSelectedAddressId(addr.id);
+    setForm({
+      name: addr.fullName || "",
+      email: user?.email || "",
+      address: addr.street || "",
+      city: addr.city || "",
+      zip: addr.postal || "",
+      phone: addr.phone || "",
+    });
+  };
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shipping = cart.length > 0 ? 5 : 0;
   const total = subtotal + shipping;
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: any) =>
     setForm({ ...form, [e.target.name]: e.target.value });
+
+  const placeOrder = async () => {
+    if (!user) return;
+
+    if (!form.phone.trim()) {
+      alert("Please enter a phone number for delivery");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const docRef = await addDoc(collection(db, "orders"), {
+        userId: user.uid,
+        userEmail: user.email,
+        items: cart,
+        subtotal,
+        shipping,
+        total,
+        shippingDetails: form,
+        status: "PENDING",
+        createdAt: serverTimestamp(),
+      });
+
+      await fetch("/api/notify-admin", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    orderId: docRef.id,
+    customerName: form.name,
+    email: form.email,
+    phone: form.phone,
+    address: {
+      street: form.address,
+      city: form.city,
+      postal: form.zip,
+    },
+    total,
+    items: cart,
+  }),
+});
+
+
+      alert("Order placed successfully!");
+      clearCart();
+      router.push("/account");
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong placing your order");
+    } finally {
+      setLoading(false);
+    }
   };
-
-const placeOrder = async () => {
-  if (!user) return;
-
-  try {
-    await addDoc(collection(db, "orders"), {
-      userId: user.uid,          // 👈 THIS LINE GOES HERE
-      userEmail: user.email,
-      items: cart,
-      subtotal,
-      shipping,
-      total,
-      shippingDetails: form,
-      createdAt: serverTimestamp(),
-    });
-
-    alert("Order placed successfully!");
-    clearCart();
-    router.push("/account");
-  } catch (err) {
-    console.error("Order save failed:", err);
-    alert("Something went wrong placing your order");
-  }
-};
 
   if (!user) return null;
 
@@ -66,22 +150,43 @@ const placeOrder = async () => {
 
         {/* SHIPPING FORM */}
         <div className="bg-white p-10 rounded-2xl shadow-sm">
-          <h2 className="text-2xl font-bold mb-8">Shipping Details</h2>
+          <h2 className="text-2xl font-bold mb-6">Shipping Details</h2>
+
+          {addresses.length > 0 && (
+            <select
+              value={selectedAddressId}
+              onChange={(e) => {
+                const addr = addresses.find(a => a.id === e.target.value);
+                if (addr) selectAddress(addr);
+              }}
+              className="w-full mb-6 p-3 border rounded"
+            >
+              <option value="">Select Saved Address</option>
+              {addresses.map((addr) => (
+                <option key={addr.id} value={addr.id}>
+                  {addr.fullName} — {addr.street}, {addr.city}
+                  {addr.isDefault ? " (Default)" : ""}
+                </option>
+              ))}
+            </select>
+          )}
 
           <div className="space-y-5">
-            <input name="name" placeholder="Full Name" className="input" onChange={handleChange} />
-            <input name="email" placeholder="Email Address" className="input" onChange={handleChange} />
-            <input name="address" placeholder="Street Address" className="input" onChange={handleChange} />
+            <input name="name" placeholder="Full Name" className="input" value={form.name} onChange={handleChange} />
+            <input name="email" placeholder="Email Address" className="input" value={form.email} onChange={handleChange} />
+            <input name="phone" placeholder="Mobile Number" className="input" value={form.phone} onChange={handleChange} />
+            <input name="address" placeholder="Street Address" className="input" value={form.address} onChange={handleChange} />
+
             <div className="flex gap-4">
-              <input name="city" placeholder="City" className="input" onChange={handleChange} />
-              <input name="zip" placeholder="ZIP Code" className="input" onChange={handleChange} />
+              <input name="city" placeholder="City" className="input" value={form.city} onChange={handleChange} />
+              <input name="zip" placeholder="ZIP Code" className="input" value={form.zip} onChange={handleChange} />
             </div>
           </div>
 
           <button
             onClick={placeOrder}
             disabled={loading}
-            className="mt-10 w-full bg-black text-white py-3 rounded-lg shadow-md hover:shadow-lg active:scale-95 transition cursor-pointer"
+            className="mt-10 w-full bg-black text-white py-3 rounded-lg shadow-md hover:shadow-lg active:scale-95 transition"
           >
             {loading ? "Placing Order..." : "Place Order"}
           </button>

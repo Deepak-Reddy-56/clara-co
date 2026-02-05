@@ -4,12 +4,14 @@ import { useState } from "react";
 import ProductModal from "./ProductModal";
 
 type ProductCardProps = {
-  id: number;
+  id: string;              // ✅ Firestore IDs are strings
   name: string;
   price: number;
   image: string;
   discount?: number;
   inStock?: boolean;
+  category?: string;
+  sections?: string[];
 };
 
 export default function ProductCard({

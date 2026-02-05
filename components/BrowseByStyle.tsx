@@ -9,7 +9,7 @@ export default function BrowseByStyle() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         
         {/* Casual */}
-        <Link href="/shop#clothes" className="relative rounded-xl overflow-hidden group cursor-pointer block">
+        <Link href="/styles/casual" className="relative rounded-xl overflow-hidden group cursor-pointer block">
           <img
             src="https://images.unsplash.com/photo-1520975661595-6453be3f7070?q=80&w=1000"
             alt="Casual"
@@ -21,7 +21,7 @@ export default function BrowseByStyle() {
         </Link>
 
         {/* Formal */}
-        <Link href="/shop#clothes" className="relative rounded-xl overflow-hidden group cursor-pointer block">
+        <Link href="/styles/formal" className="relative rounded-xl overflow-hidden group cursor-pointer block">
           <img
             src="https://images.unsplash.com/photo-1516822003754-cca485356ecb?q=80&w=1000"
             alt="Formal"
@@ -33,7 +33,7 @@ export default function BrowseByStyle() {
         </Link>
 
         {/* Party */}
-        <Link href="/shop#clothes" className="relative rounded-xl overflow-hidden group cursor-pointer block">
+        <Link href="/styles/party" className="relative rounded-xl overflow-hidden group cursor-pointer block">
           <img
             src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1000"
             alt="Party"
@@ -45,7 +45,7 @@ export default function BrowseByStyle() {
         </Link>
 
         {/* Gym */}
-        <Link href="/shop#footwear" className="relative rounded-xl overflow-hidden group cursor-pointer block">
+        <Link href="/styles/gym" className="relative rounded-xl overflow-hidden group cursor-pointer block">
           <img
             src="https://images.unsplash.com/photo-1517963879433-6ad2b056d712?q=80&w=1000"
             alt="Gym"

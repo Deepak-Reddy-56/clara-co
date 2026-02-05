@@ -3,15 +3,35 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { Product } from "@/lib/products";
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  serverTimestamp,
+} from "firebase/firestore";
+import { db } from "@/lib/firebase";
+
+type Product = {
+  id?: string;
+  name: string;
+  price: number;
+  image: string;
+  category: string;
+  inStock: boolean;
+  sections: string[];
+  discount?: number;
+};
 
 export default function AdminPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
   const [authorized, setAuthorized] = useState(false);
-  const [draftProducts, setDraftProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
 
-  // 🔐 Check if logged-in user is the admin
+  // 🔐 Admin auth check
   useEffect(() => {
     if (loading) return;
 
@@ -28,62 +48,100 @@ export default function AdminPage() {
     setAuthorized(true);
   }, [user, loading, router]);
 
-  // 📦 Load products AFTER auth is confirmed
+  // 📦 Load products from Firestore
   useEffect(() => {
     if (!authorized) return;
 
-    fetch("/api/products")
-      .then((res) => res.json())
-      .then((data) => setDraftProducts(data));
+    const loadProducts = async () => {
+      const snapshot = await getDocs(collection(db, "products"));
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as Omit<Product, "id">),
+      }));
+      setProducts(data);
+    };
+
+    loadProducts();
   }, [authorized]);
 
-  if (!authorized) return null; // prevents flicker & unauthorized view
+  if (!authorized) return null;
 
-  const updateField = (id: number, field: keyof Product, value: any) => {
-    setDraftProducts((prev) =>
+  // 🔄 Update field locally
+  const updateField = (id: string, field: keyof Product, value: any) => {
+    setProducts((prev) =>
       prev.map((p) => (p.id === id ? { ...p, [field]: value } : p))
     );
   };
 
-  const toggleSection = (id: number, section: string) => {
-    setDraftProducts((prev) =>
+  // 📂 Toggle sections
+  const toggleSection = (id: string, section: string) => {
+    setProducts((prev) =>
       prev.map((p) => {
         if (p.id !== id) return p;
         const sections = p.sections || [];
-        const exists = sections.includes(section as any);
+        const exists = sections.includes(section);
         return {
           ...p,
           sections: exists
             ? sections.filter((s) => s !== section)
-            : [...sections, section as any],
+            : [...sections, section],
         };
       })
     );
   };
 
-  const deleteProduct = (id: number) => {
-    setDraftProducts((prev) => prev.filter((p) => p.id !== id));
+  // ❌ Delete product
+  const deleteProduct = async (id: string) => {
+    await deleteDoc(doc(db, "products", id));
+    setProducts((prev) => prev.filter((p) => p.id !== id));
   };
 
-  const addProduct = () => {
-    const newProduct: Product = {
-      id: Date.now(),
+  // ➕ Add new product
+  const addProduct = async () => {
+    const newProduct = {
       name: "New Product",
       price: 100,
       image: "https://via.placeholder.com/300",
       category: "clothes",
       inStock: true,
       sections: [],
+      createdAt: serverTimestamp(),
     };
-    setDraftProducts((prev) => [newProduct, ...prev]);
+
+    const docRef = await addDoc(collection(db, "products"), newProduct);
+
+    setProducts((prev) => [
+      { id: docRef.id, ...newProduct } as Product,
+      ...prev,
+    ]);
   };
 
+  // 💾 Save edits to Firestore
   const saveChanges = async () => {
-    await fetch("/api/save-products", {
-      method: "POST",
-      body: JSON.stringify(draftProducts),
-    });
+    await Promise.all(
+      products.map((product) => {
+        if (!product.id) return;
+        const { id, ...data } = product;
+        return updateDoc(doc(db, "products", id), data);
+      })
+    );
+
     alert("Changes saved!");
+  };
+
+  // ☁️ Upload image to Cloudinary
+  const uploadToCloudinary = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "unsigned_preset");
+
+    const res = await fetch(
+      "https://api.cloudinary.com/v1_1/dc2a3idlt/image/upload",
+      { method: "POST", body: formData }
+    );
+
+    const data = await res.json();
+    return data.secure_url;
   };
 
   return (
@@ -92,7 +150,7 @@ export default function AdminPage() {
         <h1 className="text-4xl font-bold">Admin Product Catalog</h1>
         <button
           onClick={() => router.push("/")}
-          className="text-sm bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded cursor-pointer"
+          className="text-sm bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded"
         >
           Exit Admin
         </button>
@@ -101,31 +159,36 @@ export default function AdminPage() {
       <div className="flex gap-4 mb-8">
         <button
           onClick={addProduct}
-          className="bg-black text-white px-6 py-2 rounded-lg cursor-pointer"
+          className="bg-black text-white px-6 py-2 rounded-lg"
         >
           + Add Product
         </button>
 
         <button
           onClick={saveChanges}
-          className="bg-green-600 text-white px-6 py-2 rounded-lg cursor-pointer"
+          className="bg-green-600 text-white px-6 py-2 rounded-lg"
         >
           Save Changes
         </button>
+
+        <button
+            onClick={() => router.push("/admin/orders")}
+            className="bg-indigo-600 text-white px-6 py-2 rounded-lg"
+          >
+            View Orders
+      </button>
       </div>
 
+       
+
       <div className="space-y-8">
-        {draftProducts.map((product) => (
+        {products.map((product) => (
           <div
             key={product.id}
             className="bg-white p-6 rounded-xl shadow-sm flex gap-6"
           >
             <img
-              src={
-                product.image && product.image.trim() !== ""
-                  ? product.image
-                  : "https://via.placeholder.com/150?text=No+Image"
-              }
+              src={product.image || "https://via.placeholder.com/150"}
               alt={product.name}
               className="w-28 h-28 object-cover rounded-lg"
             />
@@ -134,17 +197,35 @@ export default function AdminPage() {
               <input
                 className="w-full border p-2 rounded"
                 value={product.name}
-                onChange={(e) => updateField(product.id, "name", e.target.value)}
-              />
-
-              <input
-                className="w-full border p-2 rounded"
-                placeholder="Image URL"
-                value={product.image}
                 onChange={(e) =>
-                  updateField(product.id, "image", e.target.value)
+                  updateField(product.id!, "name", e.target.value)
                 }
               />
+
+              {/* 📸 Cloudinary Upload */}
+              <div className="space-y-2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+
+                    const imageUrl = await uploadToCloudinary(file);
+                    updateField(product.id!, "image", imageUrl);
+                  }}
+                  className="text-sm"
+                />
+
+                <input
+                  className="w-full border p-2 rounded"
+                  placeholder="Image URL (auto-filled after upload)"
+                  value={product.image}
+                  onChange={(e) =>
+                    updateField(product.id!, "image", e.target.value)
+                  }
+                />
+              </div>
 
               <div className="flex gap-4">
                 <input
@@ -152,17 +233,7 @@ export default function AdminPage() {
                   className="border p-2 rounded w-32"
                   value={product.price}
                   onChange={(e) =>
-                    updateField(product.id, "price", Number(e.target.value))
-                  }
-                />
-
-                <input
-                  type="number"
-                  placeholder="Discount %"
-                  className="border p-2 rounded w-32"
-                  value={product.discount || ""}
-                  onChange={(e) =>
-                    updateField(product.id, "discount", Number(e.target.value))
+                    updateField(product.id!, "price", Number(e.target.value))
                   }
                 />
 
@@ -170,7 +241,7 @@ export default function AdminPage() {
                   className="border p-2 rounded"
                   value={product.category}
                   onChange={(e) =>
-                    updateField(product.id, "category", e.target.value)
+                    updateField(product.id!, "category", e.target.value)
                   }
                 >
                   <option value="clothes">Clothes</option>
@@ -184,9 +255,9 @@ export default function AdminPage() {
                   (section) => (
                     <button
                       key={section}
-                      onClick={() => toggleSection(product.id, section)}
-                      className={`px-3 py-1 rounded-full text-sm border cursor-pointer ${
-                        product.sections?.includes(section as any)
+                      onClick={() => toggleSection(product.id!, section)}
+                      className={`px-3 py-1 rounded-full text-sm border ${
+                        product.sections?.includes(section)
                           ? "bg-black text-white border-black"
                           : "bg-white text-gray-700 border-gray-300"
                       }`}
@@ -200,20 +271,23 @@ export default function AdminPage() {
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
-                  checked={product.inStock ?? true}
+                  checked={product.inStock}
                   onChange={(e) =>
-                    updateField(product.id, "inStock", e.target.checked)
+                    updateField(product.id!, "inStock", e.target.checked)
                   }
                 />
                 In Stock
               </label>
 
               <button
-                onClick={() => deleteProduct(product.id)}
-                className="text-red-600 text-sm cursor-pointer"
+                onClick={() => deleteProduct(product.id!)}
+                className="text-red-600 text-sm"
               >
                 Delete Product
               </button>
+
+             
+
             </div>
           </div>
         ))}

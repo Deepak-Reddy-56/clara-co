@@ -1,9 +1,6 @@
 @import "tailwindcss";
 
-.input {
-  @apply w-full border p-3 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black/20;
-}
-
+/* ===== Base Theme ===== */
 
 :root {
   --background: #ffffff;
@@ -30,11 +27,11 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-button {
-  cursor: pointer;
+html {
+  scroll-behavior: smooth;
 }
 
-/* ===== Global Button Polish ===== */
+/* ===== Global Buttons ===== */
 
 button {
   cursor: pointer;
@@ -55,6 +52,8 @@ button:disabled {
   transform: none;
 }
 
+/* ===== Inputs ===== */
+
 .input {
   width: 100%;
   border: 1px solid #e5e7eb;
@@ -70,6 +69,322 @@ button:disabled {
   box-shadow: 0 0 0 2px rgba(0,0,0,0.08);
 }
 
-html {
-  scroll-behavior: smooth;
+/* ================= MOBILE LAYOUT ================= */
+
+.mobile-app {
+  max-width: 480px;
+  margin: 0 auto;
+  background: white;
+  min-height: 100vh;
+  position: relative;
+}
+
+.mobile-content {
+  padding-bottom: 100px;
+}
+
+/* ===== Mobile Header ===== */
+
+.mobile-header {
+  height: 56px;
+  padding: 0 16px;
+  background: white;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
+.mobile-header h1 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111;
+}
+
+.mobile-header button {
+  background: none;
+  border: none;
+  padding: 6px;
+  color: #111;
+}
+
+.mobile-header svg {
+  color: #111;
+}
+
+/* ===== Sidebar Overlay ===== */
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 300;
+}
+
+.sidebar-overlay.show {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ===== Sidebar Panel ===== */
+
+.sidebar {
+  width: 260px;
+  height: 100%;
+  background: white;
+  padding: 20px;
+  color: #111;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: 301;
+  padding-top: 24px;
+}
+
+.sidebar.slide-in {
+  transform: translateX(0);
+}
+
+/* ===== Sidebar Header ===== */
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.sidebar-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.sidebar-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111;
+}
+
+
+/* Close button */
+.close-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #111;
+}
+
+/* ===== Sidebar Links ===== */
+
+.sidebar-links {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.sidebar-links a {
+  color: #111;
+  font-size: 15px;
+  text-decoration: none;
+}
+
+.sidebar-links a:hover {
+  opacity: 0.7;
+}
+
+/* ===== Bottom Navbar ===== */
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  height: 64px;
+  background: white;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 1000;
+  box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 12px;
+  color: #888;
+}
+
+.nav-item.active {
+  color: black;
+}
+
+/* ================= MOBILE SHOP PAGE ================= */
+
+.mobile-shop {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding-bottom: 10px;
+}
+
+/* ===== HERO ===== */
+
+.hero-banner {
+  height: 190px;
+  margin: 16px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f2f2f2, #e6e6e6);
+  display: flex;
+  align-items: flex-end;
+  padding: 18px;
+}
+
+.hero-content h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.hero-content button {
+  padding: 10px 16px;
+  border-radius: 22px;
+  border: none;
+  background: black;
+  color: white;
+  font-weight: 600;
+}
+
+/* ===== Section Titles ===== */
+
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+}
+
+.section-title h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111;
+}
+
+.section-title a {
+  font-size: 14px;
+  color: #777;
+  text-decoration: none;
+}
+
+/* ===== Horizontal Scroll Products ===== */
+
+.horizontal-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 0 16px;
+  scroll-snap-type: x mandatory;
+}
+
+.product-card {
+  min-width: 150px;
+  height: 190px;
+  background: #f1f1f1;
+  border-radius: 14px;
+  border: 1px solid #e8e8e8;
+  scroll-snap-align: start;
+}
+
+/* ===== Product Grid ===== */
+
+.product-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.product-card-grid {
+  height: 210px;
+  background: #f3f3f3;
+  border-radius: 14px;
+  border: 1px solid #e8e8e8;
+}
+
+/* ===== Style Grid ===== */
+
+.style-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.style-card {
+  height: 110px;
+  border-radius: 14px;
+  background: #dcdcdc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: white;
+  font-size: 16px;
+}
+
+.style-card {
+  position: relative;
+  height: 120px;
+  border-radius: 14px;
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.style-card span {
+  position: relative;
+  z-index: 2;
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.style-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.5)
+  );
+}
+
+
+/* Top area of sidebar (close + title) */
+.sidebar-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px; /* pushes links down */
+}
+
+.sidebar-top h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111;
 }

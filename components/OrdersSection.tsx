@@ -59,6 +59,19 @@ export default function OrdersSection() {
                   <div>
                     <p className="font-semibold">Order #{order.id.slice(-6)}</p>
                     <p className="text-sm text-gray-500">{date}</p>
+                    <p className="text-sm text-gray-600">
+                      Expected Delivery: {order.expectedDelivery || "—"}
+                    </p>
+                    {order.trackingLink ? (
+                      <a
+                        href={order.trackingLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-600 hover:underline"
+                      >
+                        Track Order →
+                      </a>
+                    ) : null}
                   </div>
                   <div className="text-right">
                     <p className="font-semibold">

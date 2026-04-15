@@ -5,10 +5,27 @@ import { useParams } from "next/navigation";
 import { db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
+type Order = {
+  id: string;
+  items?: Array<{ name?: string; quantity?: number; price?: number }>;
+  total?: number;
+  status?: string;
+  expectedDelivery?: string;
+  trackingLink?: string;
+  createdAt?: { seconds?: number };
+  shippingDetails?: {
+    fullName?: string;
+    street?: string;
+    city?: string;
+    postal?: string;
+    phone?: string;
+  };
+};
+
 export default function OrderDetailsPage() {
   const { id } = useParams();
 
-  const [order, setOrder] = useState<any>(null);
+  const [order, setOrder] = useState<Order | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -29,7 +46,7 @@ export default function OrderDetailsPage() {
   const total =
     order.total ??
     order.items?.reduce(
-      (sum: number, i: any) => sum + i.price * i.quantity,
+      (sum: number, i) => sum + (i.price ?? 0) * (i.quantity ?? 0),
       0
     ) ??
     0;
@@ -47,14 +64,26 @@ export default function OrderDetailsPage() {
         <p><b>Order ID:</b> {order.id}</p>
         <p><b>Status:</b> {order.status || "PENDING"}</p>
         <p><b>Ordered On:</b> {date}</p>
-        <p><b>Expected Delivery:</b> —</p>
+        <p><b>Expected Delivery:</b> {order.expectedDelivery || "—"}</p>
+        {order.trackingLink ? (
+          <p>
+            <a
+              href={order.trackingLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "#2563eb", fontWeight: 600 }}
+            >
+              Track Order →
+            </a>
+          </p>
+        ) : null}
       </div>
 
       {/* ITEMS */}
       <h3 style={section}>Items</h3>
 
       <div style={card}>
-        {order.items?.map((item: any, i: number) => (
+        {order.items?.map((item, i: number) => (
           <div key={i} style={{ marginBottom: "8px" }}>
             {item.name} × {item.quantity}
           </div>
@@ -75,8 +104,7 @@ export default function OrderDetailsPage() {
             <p>{order.shippingDetails.fullName}</p>
             <p>{order.shippingDetails.street}</p>
             <p>
-              {order.shippingDetails.city} -{" "}
-              {order.shippingDetails.postal}
+              {order.shippingDetails.city} - {order.shippingDetails.postal}
             </p>
             <p>{order.shippingDetails.phone}</p>
           </div>

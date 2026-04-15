@@ -19,6 +19,8 @@ type Order = {
   items: any[];
   total: number;
   status: string;
+  expectedDelivery?: string;
+  trackingLink?: string;
   createdAt: any;
   shippingDetails?: {
     // Desktop
@@ -71,6 +73,18 @@ export default function AdminOrdersPage() {
 
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
+    );
+  };
+
+  const updateOrderField = async (
+    orderId: string,
+    field: "expectedDelivery" | "trackingLink",
+    value: string
+  ) => {
+    await updateDoc(doc(db, "orders", orderId), { [field]: value });
+
+    setOrders((prev) =>
+      prev.map((o) => (o.id === orderId ? { ...o, [field]: value } : o))
     );
   };
 
@@ -128,7 +142,7 @@ export default function AdminOrdersPage() {
                     <p className="text-sm text-gray-600">{date}</p>
                   </div>
 
-                  <div className="text-right">
+                  <div className="text-right min-w-[260px]">
                     <p className="font-bold text-lg">
                       $
                       {(
@@ -162,6 +176,49 @@ export default function AdminOrdersPage() {
                         <option value="SHIPPED">SHIPPED</option>
                         <option value="DELIVERED">DELIVERED</option>
                       </select>
+                    </div>
+
+                    <div className="mt-3 p-3 rounded-lg border border-gray-200 bg-gray-50 text-left">
+                      <p className="text-xs font-semibold text-gray-700 mb-2">
+                        Delivery Tracking
+                      </p>
+
+                      <div className="space-y-2">
+                        <label className="block text-xs text-gray-600">
+                          Expected Delivery
+                        </label>
+                        <input
+                          type="date"
+                          value={order.expectedDelivery ?? ""}
+                          onChange={(e) =>
+                            updateOrderField(
+                              order.id,
+                              "expectedDelivery",
+                              e.target.value
+                            )
+                          }
+                          className="w-full border border-gray-300 rounded px-2 py-1 text-sm bg-white text-gray-900"
+                        />
+                      </div>
+
+                      <div className="space-y-2 mt-3">
+                        <label className="block text-xs text-gray-600">
+                          Tracking Link
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="https://..."
+                          value={order.trackingLink ?? ""}
+                          onChange={(e) =>
+                            updateOrderField(
+                              order.id,
+                              "trackingLink",
+                              e.target.value
+                            )
+                          }
+                          className="w-full border border-gray-300 rounded px-2 py-1 text-sm bg-white text-gray-900"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>

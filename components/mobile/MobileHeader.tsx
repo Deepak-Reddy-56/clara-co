@@ -10,13 +10,18 @@ export default function MobileHeader() {
   return (
     <>
       <header className="mobile-header">
+        {/* LEFT - menu */}
         <button onClick={() => setOpen(true)}>
           <Menu size={22} />
         </button>
 
+        {/* CENTER - logo */}
         <h1 className="logo">Clara&Co</h1>
 
-        <div style={{ width: 22 }} /> {/* spacer */}
+        {/* RIGHT - desktop switch */}
+        <a href="/?desktop=true" className="desktop-switch-btn">
+          Desktop
+        </a>
       </header>
 
       <MobileSidebar open={open} setOpen={setOpen} />

@@ -212,6 +212,10 @@ export default function Header() {
             ) : (
               <Link href="/login">Login</Link>
             )}
+
+            <a href="/m/shop" className="mobile-switch-btn">
+                Mobile
+            </a>
           </div>
         </div>
       </header>

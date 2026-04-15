@@ -9,11 +9,16 @@ function SectionTitle({ title, link }: { title: string; link?: string }) {
   );
 }
 
-function ProductGrid() {
+import { getProductsBySection } from "@/lib/getProductsBySection";
+import ProductCard from "@/components/mobile/ProductCard";
+
+async function ProductGrid() {
+  const products = await getProductsBySection("new-arrivals");
+
   return (
     <div className="product-grid">
-      {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="product-card-grid" />
+      {products.map((product: any) => (
+        <ProductCard key={product.id} product={product} />
       ))}
     </div>
   );
@@ -44,18 +49,21 @@ function StyleGrid() {
   );
 }
 
+async function HorizontalScroll() {
+  const products = await getProductsBySection("top-selling");
 
-function HorizontalScroll() {
   return (
     <div className="horizontal-scroll">
-      {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="product-card" />
+      {products.map((product: any) => (
+        <div key={product.id} style={{ minWidth: "160px" }}>
+          <ProductCard product={product} />
+        </div>
       ))}
     </div>
   );
 }
 
-export default function MobileShopPage() {
+export default async function MobileShopPage() {
   return (
     <div className="mobile-shop">
 
@@ -67,10 +75,6 @@ export default function MobileShopPage() {
         </div>
       </section>
 
-      {/* SHOP BY STYLE */}
-      <SectionTitle title="Shop by Style" link="/m/styles" />
-      <StyleGrid />
-
       {/* NEW ARRIVALS */}
       <SectionTitle title="New Arrivals" link="/m/new" />
       <ProductGrid />
@@ -78,6 +82,10 @@ export default function MobileShopPage() {
       {/* TOP SELLING */}
       <SectionTitle title="Top Selling" link="/m/top" />
       <HorizontalScroll />
+
+      {/* SHOP BY STYLE */}
+      <SectionTitle title="Shop by Style" link="/m/styles" />
+      <StyleGrid />
 
     </div>
   );

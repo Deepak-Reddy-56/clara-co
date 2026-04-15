@@ -61,7 +61,18 @@ export default function OrdersSection() {
                     <p className="text-sm text-gray-500">{date}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold">${order.total.toFixed(2)}</p>
+                    <p className="font-semibold">
+  $
+  {(
+    order.total ??
+    order.items?.reduce(
+      (sum: number, item: any) =>
+        sum + item.price * item.quantity,
+      0
+    ) ??
+    0
+  ).toFixed(2)}
+</p>
                     <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(order.status || "PENDING")}`}>
                       {order.status || "PENDING"}
                     </span>

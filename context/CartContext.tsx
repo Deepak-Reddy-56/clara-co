@@ -1,9 +1,9 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
 export type CartItem = {
-  id: number;
+  id: string; // ✅ FIXED
   name: string;
   price: number;
   image: string;
@@ -13,9 +13,9 @@ export type CartItem = {
 type CartContextType = {
   cart: CartItem[];
   addToCart: (product: Omit<CartItem, "quantity">) => void;
-  increaseQty: (id: number) => void;
-  decreaseQty: (id: number) => void;
-  removeFromCart: (id: number) => void;
+  increaseQty: (id: string) => void; // ✅ FIXED
+  decreaseQty: (id: string) => void; // ✅ FIXED
+  removeFromCart: (id: string) => void; // ✅ FIXED
   clearCart: () => void;
 };
 
@@ -23,6 +23,17 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
+
+  // ✅ Load from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("cart");
+    if (stored) setCart(JSON.parse(stored));
+  }, []);
+
+  // ✅ Save to localStorage
+  useEffect(() => {
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }, [cart]);
 
   const addToCart = (product: Omit<CartItem, "quantity">) => {
     setCart((prev) => {
@@ -40,15 +51,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const increaseQty = (id: number) => {
+  const increaseQty = (id: string) => {
     setCart((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, quantity: item.quantity + 1 } : item
+        item.id === id
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
       )
     );
   };
 
-  const decreaseQty = (id: number) => {
+  const decreaseQty = (id: string) => {
     setCart((prev) =>
       prev
         .map((item) =>
@@ -60,7 +73,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  const removeFromCart = (id: number) => {
+  const removeFromCart = (id: string) => {
     setCart((prev) => prev.filter((item) => item.id !== id));
   };
 

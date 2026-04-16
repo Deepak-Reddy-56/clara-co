@@ -138,7 +138,6 @@ export default function StylePage() {
             <span className="text-5xl mb-4">🛍</span>
             <h2 className="text-xl font-semibold text-gray-700 mb-2">Nothing here yet</h2>
             <p className="text-gray-400 text-sm max-w-sm">
-              The admin hasn't assigned any products to the <strong>{meta.label}</strong> style yet.
               Check back soon!
             </p>
             <button

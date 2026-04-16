@@ -23,6 +23,7 @@ type Product = {
   inStock: boolean;
   sections: string[];
   discount?: number;
+  images?: string[];
 };
 
 export default function AdminPage() {
@@ -69,7 +70,14 @@ export default function AdminPage() {
   // 🔄 Update field locally
   const updateField = (id: string, field: keyof Product, value: any) => {
     setProducts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, [field]: value } : p))
+      prev.map((p) => {
+        if (p.id !== id) return p;
+        const next = { ...p, [field]: value };
+        if (field === "images" && Array.isArray(value)) {
+          next.image = value.length > 0 ? value[0] : "";
+        }
+        return next;
+      })
     );
   };
 
@@ -105,6 +113,7 @@ export default function AdminPage() {
       category: "clothes",
       inStock: true,
       sections: [],
+      images: [],
       createdAt: serverTimestamp(),
     };
 
@@ -203,28 +212,45 @@ export default function AdminPage() {
               />
 
               {/* 📸 Cloudinary Upload */}
-              <div className="space-y-2">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-
-                    const imageUrl = await uploadToCloudinary(file);
-                    updateField(product.id!, "image", imageUrl);
-                  }}
-                  className="text-sm"
-                />
-
-                <input
-                  className="w-full border p-2 rounded"
-                  placeholder="Image URL (auto-filled after upload)"
-                  value={product.image}
-                  onChange={(e) =>
-                    updateField(product.id!, "image", e.target.value)
-                  }
-                />
+              <div className="space-y-3 p-3 bg-gray-50 rounded-lg border">
+                <p className="text-sm font-semibold text-gray-700">Product Images</p>
+                <div className="flex gap-3 flex-wrap">
+                  {(product.images || (product.image ? [product.image] : [])).map((img, i) => (
+                    <div key={i} className="relative group">
+                      <img src={img} className="w-16 h-16 object-cover rounded border border-gray-300" />
+                      <button 
+                        onClick={() => {
+                          const list = [...(product.images || (product.image ? [product.image] : []))];
+                          list.splice(i, 1);
+                          updateField(product.id!, "images", list);
+                        }}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition shadow"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  
+                  <label className="w-16 h-16 border-2 border-dashed border-gray-300 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 text-gray-500 transition">
+                    <span className="text-xl">+</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={async (e) => {
+                        const files = Array.from(e.target.files || []);
+                        if (!files.length) return;
+                        
+                        const current = product.images || (product.image ? [product.image] : []);
+                        
+                        // Upload sequentially or parallel (parallel here)
+                        const newUrls = await Promise.all(files.map(f => uploadToCloudinary(f)));
+                        updateField(product.id!, "images", [...current, ...newUrls]);
+                      }}
+                    />
+                  </label>
+                </div>
               </div>
 
               <div className="flex gap-4">

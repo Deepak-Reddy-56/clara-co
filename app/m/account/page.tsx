@@ -117,6 +117,15 @@ export default function MobileAccountPage() {
       <div style={userCard}>
         <h3>{user.displayName}</h3>
         <p style={{ color: "#666" }}>{user.email}</p>
+        
+        {user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL && (
+          <button 
+            onClick={() => router.push("/m/admin")} 
+            style={{ ...btn, marginTop: "12px", background: "white", color: "#111", border: "1px solid #ddd" }}
+          >
+            Admin Dashboard
+          </button>
+        )}
       </div>
 
       {/* ── ORDERS — section dropdown ── */}

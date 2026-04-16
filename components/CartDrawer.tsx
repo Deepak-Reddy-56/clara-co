@@ -32,7 +32,7 @@ export default function CartDrawer({ open, onClose }: any) {
                 <img src={item.image || "https://placehold.co/80"} className="w-16 h-16 rounded object-cover" alt={item.name} />
                 <div className="flex-1">
                   <h3 className="font-semibold text-sm text-gray-900">{item.name}</h3>
-                  <p className="text-sm text-gray-500">${item.price.toFixed(2)}</p>
+                  <p className="text-sm text-gray-500">₹{item.price.toFixed(2)}</p>
 
                   <div className="flex items-center mt-2 border rounded-full w-fit overflow-hidden">
                     <button onClick={() => decreaseQty(item.id)} className="px-3 py-1 hover:bg-gray-100">−</button>
@@ -48,15 +48,15 @@ export default function CartDrawer({ open, onClose }: any) {
             <div className="pt-6 border-t mt-4 space-y-5">
               <div className="flex justify-between text-sm text-gray-700">
                 <span>Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>₹{subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm text-gray-700">
                 <span>Shipping</span>
-                <span>${shipping.toFixed(2)}</span>
+                <span>₹{shipping.toFixed(2)}</span>
               </div>
               <div className="flex justify-between font-semibold text-lg text-gray-900">
                 <span>Total</span>
-                <span>${total.toFixed(2)}</span>
+                <span>₹{total.toFixed(2)}</span>
               </div>
 
               <div className="flex flex-col gap-4 pt-2">

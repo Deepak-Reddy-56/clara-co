@@ -230,7 +230,7 @@ export default function AdminOrdersPage() {
 
                     <div className="text-left md:text-right">
                       <p className="text-lg font-bold">
-                        ${calculateOrderTotal(order).toFixed(2)}
+                        ₹{calculateOrderTotal(order).toFixed(2)}
                       </p>
 
                       <div className="mt-2 flex flex-wrap items-center gap-2 md:justify-end">
@@ -328,7 +328,7 @@ export default function AdminOrdersPage() {
                           {item.name || "Unnamed item"} x {item.quantity ?? 0}
                         </span>
                         <span>
-                          $
+                          ₹
                           {(
                             (item.price ?? 0) * (item.quantity ?? 0)
                           ).toFixed(2)}

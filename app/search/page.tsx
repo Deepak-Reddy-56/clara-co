@@ -15,6 +15,7 @@ type Product = {
   name: string;
   price: number;
   image: string;
+  images?: string[];
   inStock?: boolean;
 };
 
@@ -37,6 +38,7 @@ export default function SearchPage() {
             name: d.name || "",
             price: Number(d.price) || 0,
             image: d.image || "",
+            images: d.images || [],
             inStock: d.inStock !== false,
           };
         });

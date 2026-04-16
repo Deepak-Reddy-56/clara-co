@@ -202,21 +202,21 @@ export default function CheckoutPage() {
                 <div>
                   <p className="font-medium">{item.name}</p>
                   <p className="text-gray-500 text-sm">
-                    {item.quantity} × ${item.price.toFixed(2)}
+                    {item.quantity} × ₹{item.price.toFixed(2)}
                   </p>
                 </div>
                 <span className="font-medium">
-                  ${(item.price * item.quantity).toFixed(2)}
+                  ₹{(item.price * item.quantity).toFixed(2)}
                 </span>
               </div>
             ))}
           </div>
 
           <div className="border-t mt-8 pt-5 space-y-3">
-            <div className="flex justify-between"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
-            <div className="flex justify-between"><span>Shipping</span><span>${shipping.toFixed(2)}</span></div>
+            <div className="flex justify-between"><span>Subtotal</span><span>₹{subtotal.toFixed(2)}</span></div>
+            <div className="flex justify-between"><span>Shipping</span><span>₹{shipping.toFixed(2)}</span></div>
             <div className="flex justify-between font-semibold text-lg pt-2">
-              <span>Total</span><span>${total.toFixed(2)}</span>
+              <span>Total</span><span>₹{total.toFixed(2)}</span>
             </div>
           </div>
         </div>

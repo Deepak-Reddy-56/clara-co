@@ -125,7 +125,7 @@ export default function OrdersSection() {
                         <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(order.status || "PENDING")}`}>
                           {order.status || "PENDING"}
                         </span>
-                        <span className="font-semibold text-sm">${total}</span>
+                        <span className="font-semibold text-sm">₹{total}</span>
                         <svg
                           className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
                           fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
@@ -142,7 +142,7 @@ export default function OrdersSection() {
                           {(order.items || []).map((item: any, i: number) => (
                             <div key={i} className="flex justify-between text-sm text-gray-700">
                               <span>{item.name} × {item.quantity}</span>
-                              <span>${((item.price ?? 0) * (item.quantity ?? 0)).toFixed(2)}</span>
+                              <span>₹{((item.price ?? 0) * (item.quantity ?? 0)).toFixed(2)}</span>
                             </div>
                           ))}
                         </div>

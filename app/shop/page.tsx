@@ -12,6 +12,7 @@ type Product = {
   name: string;
   price: number;
   image: string;
+  images?: string[];
   category?: string;
   inStock?: boolean;
 };
@@ -37,6 +38,7 @@ export default function ShopPage() {
             name: d.name || "Untitled",
             price: Number(d.price) || 0,
             image: d.image || "",
+            images: d.images || [],
             category: (d.category || "clothes").toLowerCase(),
             inStock: d.inStock !== false,
           };

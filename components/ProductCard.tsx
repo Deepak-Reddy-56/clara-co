@@ -8,6 +8,7 @@ type ProductCardProps = {
   name: string;
   price: number;
   image: string;
+  images?: string[];
   discount?: number;
   inStock?: boolean;
   category?: string;
@@ -19,6 +20,7 @@ export default function ProductCard({
   name,
   price,
   image,
+  images,
   discount,
   inStock = true,
 }: ProductCardProps) {
@@ -65,14 +67,14 @@ export default function ProductCard({
             {discountedPrice ? (
               <>
                 <span className="text-black font-bold">
-                  ${discountedPrice.toFixed(2)}
+                  ₹{discountedPrice.toFixed(2)}
                 </span>
                 <span className="text-gray-400 line-through text-sm">
-                  ${price.toFixed(2)}
+                  ₹{price.toFixed(2)}
                 </span>
               </>
             ) : (
-              <span className="text-black font-bold">${price.toFixed(2)}</span>
+              <span className="text-black font-bold">₹{price.toFixed(2)}</span>
             )}
           </div>
         </div>
@@ -81,7 +83,7 @@ export default function ProductCard({
       {/* QUICK VIEW MODAL */}
       {open && (
         <ProductModal
-          product={{ id, name, price, image, discount, inStock }}
+          product={{ id, name, price, image, images, discount, inStock }}
           onClose={() => setOpen(false)}
         />
       )}

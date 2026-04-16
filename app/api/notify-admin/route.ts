@@ -23,7 +23,7 @@ ${data.address.city} - ${data.address.postal}
 🧾 *Items*
 ${itemList}
 
-💰 *Total:* $${data.total}
+💰 *Total:* ₹${data.total}
 `;
 
     await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {

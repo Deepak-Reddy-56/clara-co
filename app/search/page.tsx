@@ -1,14 +1,12 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import ProductCard from "@/components/ProductCard";
 import Header from "@/components/Header";
 import { useRouter } from "next/navigation";
-const router = useRouter();
-
 
 type Product = {
   id: string;
@@ -19,7 +17,8 @@ type Product = {
   inStock?: boolean;
 };
 
-export default function SearchPage() {
+function SearchContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const query = searchParams.get("q")?.toLowerCase().trim() || "";
 
@@ -89,5 +88,13 @@ export default function SearchPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen grid items-center justify-center">Loading...</div>}>
+      <SearchContent />
+    </Suspense>
   );
 }

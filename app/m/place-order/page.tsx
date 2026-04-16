@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
@@ -21,7 +21,7 @@ type Address = {
   zip?: string;
 };
 
-export default function PlaceOrderPage() {
+function PlaceOrderContent() {
   const params = useSearchParams();
   const router = useRouter();
 
@@ -97,5 +97,13 @@ export default function PlaceOrderPage() {
     <div style={{ padding: "20px", textAlign: "center" }}>
       <p>Placing your order...</p>
     </div>
+  );
+}
+
+export default function PlaceOrderPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: "20px", textAlign: "center" }}><p>Loading...</p></div>}>
+      <PlaceOrderContent />
+    </Suspense>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import ProductCard from "@/components/ProductCard";
@@ -17,7 +17,7 @@ type Product = {
   inStock?: boolean;
 };
 
-export default function ShopPage() {
+function ShopContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -145,5 +145,13 @@ export default function ShopPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen grid items-center justify-center">Loading...</div>}>
+      <ShopContent />
+    </Suspense>
   );
 }

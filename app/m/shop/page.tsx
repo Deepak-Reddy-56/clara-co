@@ -41,7 +41,7 @@ function SectionTitle({ title, link }: { title: string; link?: string }) {
 // ── Main page ──────────────────────────────────────────
 
 export default function MobileShopPage() {
-  const [query, setQuery]           = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [fetched, setFetched]       = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -53,7 +53,7 @@ export default function MobileShopPage() {
         const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
         const snapshot = await getDocs(q);
         const data: Product[] = snapshot.docs.map((doc) => {
-          const d = doc.data();
+          const d = doc.data() as any;
           return {
             id: doc.id,
             name: d.name || "",
@@ -79,12 +79,12 @@ export default function MobileShopPage() {
   const topSelling   = allProducts.filter((p) => p.inStock && p.sections?.includes("top-selling"));
 
   // Live-search filtered results
-  const q = query.trim().toLowerCase();
-  const searchResults = q.length > 0
-    ? allProducts.filter((p) => p.name.toLowerCase().includes(q))
+  const qStr = searchQuery.trim().toLowerCase();
+  const searchResults = qStr.length > 0
+    ? allProducts.filter((p) => p.name.toLowerCase().includes(qStr))
     : [];
 
-  const isSearching = q.length > 0;
+  const isSearching = qStr.length > 0;
 
   return (
     <div className="mobile-shop">
@@ -105,8 +105,8 @@ export default function MobileShopPage() {
           }} />
           <input
             ref={searchRef}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search products..."
             style={{
               width: "100%",
@@ -120,9 +120,9 @@ export default function MobileShopPage() {
               color: "black",
             }}
           />
-          {query && (
+          {searchQuery && (
             <button
-              onClick={() => { setQuery(""); searchRef.current?.focus(); }}
+              onClick={() => { setSearchQuery(""); searchRef.current?.focus(); }}
               style={{
                 position: "absolute", right: "10px", top: "50%",
                 transform: "translateY(-50%)", background: "none",
@@ -147,7 +147,7 @@ export default function MobileShopPage() {
             <div style={{ textAlign: "center", padding: "60px 24px" }}>
               <p style={{ fontSize: "28px", marginBottom: "8px" }}>😕</p>
               <p style={{ fontWeight: 600, color: "#333", marginBottom: "4px" }}>
-                No results for "{query}"
+                No results for "{searchQuery}"
               </p>
               <p style={{ fontSize: "13px", color: "#999" }}>Try a different keyword</p>
             </div>

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Search, X } from "lucide-react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import ProductCard from "@/components/mobile/ProductCard";
 
@@ -50,7 +50,8 @@ export default function MobileShopPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const snapshot = await getDocs(collection(db, "products"));
+        const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
+        const snapshot = await getDocs(q);
         const data: Product[] = snapshot.docs.map((doc) => {
           const d = doc.data();
           return {
@@ -188,9 +189,11 @@ export default function MobileShopPage() {
           {/* ── NEW ARRIVALS ── */}
           <SectionTitle title="New Arrivals" link="/m/new" />
           {fetched && newArrivals.length > 0 ? (
-            <div className="product-grid">
-              {newArrivals.slice(0, 4).map((p) => (
-                <ProductCard key={p.id} product={p} />
+            <div className="horizontal-scroll">
+              {newArrivals.slice(0, 10).map((p) => (
+                <div key={p.id} style={{ minWidth: "160px" }}>
+                  <ProductCard product={p} />
+                </div>
               ))}
             </div>
           ) : fetched ? (
@@ -203,7 +206,7 @@ export default function MobileShopPage() {
           <SectionTitle title="Top Selling" link="/m/top" />
           {fetched && topSelling.length > 0 ? (
             <div className="horizontal-scroll">
-              {topSelling.map((p) => (
+              {topSelling.slice(0, 10).map((p) => (
                 <div key={p.id} style={{ minWidth: "160px" }}>
                   <ProductCard product={p} />
                 </div>

@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { getProductsBySection } from "@/lib/getProductsBySection";
 import ProductCard from "@/components/mobile/ProductCard";
 
+export const dynamic = "force-dynamic";
+
 const STYLE_META: Record<
   string,
   { label: string; image: string; description: string }

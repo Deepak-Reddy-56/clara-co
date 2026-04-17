@@ -1,6 +1,8 @@
 import { getProductsBySection } from "@/lib/getProductsBySection";
 import ProductCard from "@/components/mobile/ProductCard";
 
+export const dynamic = "force-dynamic";
+
 export default async function MobileTopPage() {
   const products = await getProductsBySection("top-selling");
 

@@ -168,7 +168,7 @@ export default function AddProductModal({ isOpen, onClose, onSave }: AddProductM
 
           {/* Settings */}
           <div>
-            <label style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }} onClick={(e) => { e.preventDefault(); setInStock(!inStock); }}>
               <div style={{
                 width: "44px", height: "24px", borderRadius: "999px",
                 background: inStock ? theme.primary : theme.border, position: "relative", transition: "0.2s"

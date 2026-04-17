@@ -79,8 +79,8 @@ export default function MobileShopPage() {
   }, []);
 
   // Derived data from allProducts
-  const newArrivals  = allProducts.filter((p) => p.inStock && p.sections?.includes("new-arrivals"));
-  const topSelling   = allProducts.filter((p) => p.inStock && p.sections?.includes("top-selling"));
+  const newArrivals  = allProducts.filter((p) => p.sections?.includes("new-arrivals"));
+  const topSelling   = allProducts.filter((p) => p.sections?.includes("top-selling"));
 
   // Live-search filtered results
   const qStr = searchQuery.trim().toLowerCase();

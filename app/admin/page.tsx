@@ -13,6 +13,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import AddProductModal from "@/components/AddProductModal";
 
 type Product = {
   id?: string;
@@ -31,6 +32,7 @@ export default function AdminPage() {
   const { user, loading } = useAuth();
   const [authorized, setAuthorized] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // 🔐 Admin auth check
   useEffect(() => {
@@ -105,15 +107,18 @@ export default function AdminPage() {
   };
 
   // ➕ Add new product
-  const addProduct = async () => {
+  const handleAddProductSave = async (data: any) => {
+    const newUrls = await Promise.all(data.brandNewFiles.map((f: File) => uploadToCloudinary(f)));
+    
     const newProduct = {
-      name: "New Product",
-      price: 100,
-      image: "https://via.placeholder.com/300",
-      category: "clothes",
-      inStock: true,
-      sections: [],
-      images: [],
+      name: data.name,
+      price: data.price,
+      discount: data.discount,
+      category: data.category,
+      inStock: data.inStock,
+      sections: data.sections,
+      image: newUrls.length > 0 ? newUrls[0] : "",
+      images: newUrls,
       createdAt: serverTimestamp(),
     };
 
@@ -167,7 +172,7 @@ export default function AdminPage() {
 
       <div className="flex gap-4 mb-8">
         <button
-          onClick={addProduct}
+          onClick={() => setIsAddModalOpen(true)}
           className="bg-black text-white px-6 py-2 rounded-lg"
         >
           + Add Product
@@ -318,6 +323,12 @@ export default function AdminPage() {
           </div>
         ))}
       </div>
+
+      <AddProductModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)} 
+        onSave={handleAddProductSave} 
+      />
     </main>
   );
 }

@@ -9,6 +9,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { ChevronDown, ChevronUp, Plus, Save, Trash2, Package, ShoppingBag, LogOut } from "lucide-react";
+import AddProductModal from "@/components/AddProductModal";
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -112,6 +113,7 @@ export default function MobileAdminPage() {
 
   const [authorized, setAuthorized] = useState(false);
   const [tab, setTab] = useState<"products" | "orders">("products");
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // Products state
   const [products, setProducts] = useState<Product[]>([]);
@@ -182,12 +184,35 @@ export default function MobileAdminPage() {
       return { ...x, sections: s.includes(section) ? s.filter((v) => v !== section) : [...s, section] };
     }));
 
-  const addProduct = async () => {
-    const np = { name: "New Product", price: 999, image: "", images: [], category: "clothes", inStock: true, sections: [], createdAt: serverTimestamp() };
-    const ref = await addDoc(collection(db, "products"), np);
-    const newP = { id: ref.id, ...np } as Product;
+  const handleAddProductSave = async (data: any) => {
+    setSaving(true);
+    const newUrls = [];
+    for (const f of data.brandNewFiles || []) {
+      const formData = new FormData();
+      formData.append("file", f);
+      formData.append("upload_preset", "unsigned_preset");
+      const res = await fetch("https://api.cloudinary.com/v1_1/dc2a3idlt/image/upload", { method: "POST", body: formData });
+      const resData = await res.json();
+      newUrls.push(resData.secure_url);
+    }
+    
+    const newProduct = {
+      name: data.name,
+      price: data.price,
+      discount: data.discount,
+      category: data.category,
+      inStock: data.inStock,
+      sections: data.sections,
+      image: newUrls.length > 0 ? newUrls[0] : "",
+      images: newUrls,
+      createdAt: serverTimestamp(),
+    };
+
+    const ref = await addDoc(collection(db, "products"), newProduct);
+    const newP = { id: ref.id, ...newProduct } as Product;
     setProducts((p) => [newP, ...p]);
     setExpandedProduct(ref.id);
+    setSaving(false);
   };
 
   const deleteProduct = async (id: string) => {
@@ -276,7 +301,7 @@ export default function MobileAdminPage() {
         <div style={{ padding: "16px" }}>
           {/* Action buttons */}
           <div style={{ display: "flex", gap: "8px", marginBottom: "16px", flexWrap: "wrap" }}>
-            <button onClick={addProduct} style={btn("#111")}>
+            <button onClick={() => setIsAddModalOpen(true)} style={btn("#111")}>
               <Plus size={14} /> Add Product
             </button>
             <button onClick={saveAll} disabled={saving} style={btn("#16a34a")}>
@@ -596,6 +621,12 @@ export default function MobileAdminPage() {
           })}
         </div>
       )}
+
+      <AddProductModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)} 
+        onSave={handleAddProductSave} 
+      />
     </div>
   );
 }

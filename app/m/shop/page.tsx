@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Search, X } from "lucide-react";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import ProductCard from "@/components/mobile/ProductCard";
 
@@ -18,6 +18,7 @@ type Product = {
   inStock?: boolean;
   discount?: number;
   sections?: string[];
+  createdAt?: number;
 };
 
 // ── Static style data ──────────────────────────────────
@@ -50,8 +51,7 @@ export default function MobileShopPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
-        const snapshot = await getDocs(q);
+        const snapshot = await getDocs(collection(db, "products"));
         const data: Product[] = snapshot.docs.map((doc) => {
           const d = doc.data() as any;
           return {
@@ -63,8 +63,12 @@ export default function MobileShopPage() {
             inStock: d.inStock !== false,
             discount: d.discount || 0,
             sections: d.sections || [],
+            createdAt: d.createdAt?.toMillis?.() || d.createdAt?.seconds * 1000 || 0,
           };
         });
+
+        data.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
         setAllProducts(data);
         setFetched(true);
       } catch (err) {

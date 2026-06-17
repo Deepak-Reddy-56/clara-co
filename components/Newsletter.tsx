@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Newsletter() {
   return (
     <section className="bg-black text-white py-16 mt-10">
@@ -7,15 +9,18 @@ export default function Newsletter() {
           STAY UP TO DATE ABOUT OUR LATEST OFFERS
         </h2>
 
-        <div className="flex w-full md:w-auto gap-4">
+        <div className="flex w-full md:w-auto gap-4 items-center">
           <input
             type="email"
             placeholder="Enter your email address"
             className="px-4 py-3 rounded-full w-full md:w-80 text-gray-800"
           />
-          <button className="bg-white text-black px-6 py-3 rounded-full font-semibold hover:opacity-80 transition">
+          <Link
+            href="https://example.com"
+            className="bg-white text-black px-6 py-3 rounded-full font-semibold hover:opacity-80 transition text-center whitespace-nowrap"
+          >
             Subscribe
-          </button>
+          </Link>
         </div>
 
       </div>

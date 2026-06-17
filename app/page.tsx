@@ -7,7 +7,6 @@ import BrandStrip from "@/components/BrandStrip";
 import NewArrivals from "@/components/NewArrivals";
 import TopSelling from "@/components/TopSelling";
 import BrowseByStyle from "@/components/BrowseByStyle";
-import Testimonials from "@/components/Testimonials";
 import Newsletter from "@/components/Newsletter";
 import Footer from "@/components/Footer";
 
@@ -49,7 +48,6 @@ export default async function Home({
         <BrowseByStyle />
       </section>
 
-      <Testimonials />
       <Newsletter />
       <Footer />
     </main>

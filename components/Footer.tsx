@@ -16,11 +16,12 @@ export default function Footer() {
         <div>
           <h4 className="font-semibold mb-4">Our Store</h4>
           <ul className="space-y-2 text-sm text-gray-600">
-            <li>123 Fashion Street</li>
-            <li>Hyderabad, Telangana 500081</li>
+            <li>CLARA & CO, </li>
+            <li>beside DPS School, Opp to Marluce Bakery</li>
+            <li>Warangal, Telangana 506004</li>
             <li>India</li>
-            <li>Phone: +91 98765 43210</li>
-            <li>Email: support@claraandco.com</li>
+            <li>Phone: +91 7981608099</li>
+            <li><a href="https://maps.goo.gl/9rtuEMXsYVZkBMZh7" target="_blank">Location</a></li>
           </ul>
         </div>
 
@@ -41,7 +42,7 @@ export default function Footer() {
           <div className="flex gap-4 text-gray-600">
 
             {/* Instagram */}
-            <a href="#" className="hover:text-black transition">
+            <a href="https://www.instagram.com/clara_and_co_?igsh=a3B0MnI2Y3V1YWtz" className="hover:text-black transition">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M7.75 2C4.686 2 2 4.686 2 7.75v8.5C2 19.314 4.686 22 7.75 22h8.5C19.314 22 22 19.314 22 16.25v-8.5C22 4.686 19.314 2 16.25 2h-8.5zM12 7.25a4.75 4.75 0 110 9.5 4.75 4.75 0 010-9.5zm0 1.5a3.25 3.25 0 100 6.5 3.25 3.25 0 000-6.5zm4.875-.625a1.125 1.125 0 11-2.25 0 1.125 1.125 0 012.25 0z"/>
               </svg>

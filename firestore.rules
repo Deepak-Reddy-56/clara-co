@@ -50,7 +50,7 @@ service cloud.firestore {
 
     function isAdmin() {
       return request.auth != null
-             && request.auth.token.email == 'nisargakaratagi1234@gmail.com';
+             && request.auth.token.email == 'kothurisaideepak@gmail.com';
     }
   }
 }

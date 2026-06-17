@@ -15,6 +15,7 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
+import { authFetch } from "@/lib/authClient";
 
 type Address = {
   id: string;
@@ -34,6 +35,7 @@ export default function MobileAccountPage() {
 
   const [orders, setOrders] = useState<any[]>([]);
   const [addresses, setAddresses] = useState<Address[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Section-level toggles
   const [showOrders, setShowOrders] = useState(false);
@@ -68,10 +70,18 @@ export default function MobileAccountPage() {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
-  /* 🔒 Redirect */
   useEffect(() => {
     if (!loading && !user) router.push("/m/login");
   }, [user, loading]);
+
+  /* 🔐 Admin check */
+  useEffect(() => {
+    if (!user) { setIsAdmin(false); return; }
+    authFetch("/api/check-admin")
+      .then((res) => res.json())
+      .then((data) => setIsAdmin(data.isAdmin))
+      .catch(() => setIsAdmin(false));
+  }, [user]);
 
   /* 📦 Orders */
   useEffect(() => {
@@ -118,7 +128,7 @@ export default function MobileAccountPage() {
         <h3>{user.displayName}</h3>
         <p style={{ color: "#666" }}>{user.email}</p>
         
-        {user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL && (
+        {isAdmin && (
           <button 
             onClick={() => router.push("/m/admin")} 
             style={{ ...btn, marginTop: "12px", background: "white", color: "#111", border: "1px solid #ddd" }}

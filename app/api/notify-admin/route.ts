@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
+import { verifyAuth, unauthorized } from "@/lib/authUtils";
 
 export async function POST(req: Request) {
+  // 🔐 Require authenticated user (any logged-in user placing an order)
+  const auth = await verifyAuth(req);
+  if (!auth) return unauthorized();
+
   try {
     const data = await req.json();
 

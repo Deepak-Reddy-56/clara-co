@@ -5,10 +5,9 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
+import { authFetch } from "@/lib/authClient";
 import {
   collection,
-  addDoc,
-  serverTimestamp,
   query,
   where,
   getDocs,
@@ -100,36 +99,44 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
-      const docRef = await addDoc(collection(db, "orders"), {
-        userId: user.uid,
-        userEmail: user.email,
-        items: cart,
-        subtotal,
-        shipping,
-        total,
-        shippingDetails: form,
-        status: "PENDING",
-        createdAt: serverTimestamp(),
+      // 🔐 Place order via server-side API (validates prices server-side)
+      const orderRes = await authFetch("/api/place-order", {
+        method: "POST",
+        body: JSON.stringify({
+          cart: cart.map((item) => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+          })),
+          shippingDetails: form,
+        }),
       });
 
-      await fetch("/api/notify-admin", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    orderId: docRef.id,
-    customerName: form.name,
-    email: form.email,
-    phone: form.phone,
-    address: {
-      street: form.address,
-      city: form.city,
-      postal: form.zip,
-    },
-    total,
-    items: cart,
-  }),
-});
+      const orderData = await orderRes.json();
 
+      if (!orderRes.ok) {
+        alert(orderData.error || "Failed to place order");
+        return;
+      }
+
+      // 🔔 Notify admin via Telegram (authenticated)
+      await authFetch("/api/notify-admin", {
+        method: "POST",
+        body: JSON.stringify({
+          orderId: orderData.orderId,
+          customerName: form.name,
+          email: form.email,
+          phone: form.phone,
+          address: {
+            street: form.address,
+            city: form.city,
+            postal: form.zip,
+          },
+          total: orderData.total,
+          items: cart,
+        }),
+      });
 
       alert("Order placed successfully!");
       clearCart();

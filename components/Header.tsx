@@ -9,6 +9,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { authFetch } from "@/lib/authClient";
 
 export default function Header() {
   const [cartOpen, setCartOpen] = useState(false);
@@ -18,6 +19,7 @@ export default function Header() {
   const [searching, setSearching] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const profileRef = useRef<HTMLDivElement>(null);
 
@@ -37,6 +39,15 @@ export default function Header() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  /* 🔐 Check admin status server-side */
+  useEffect(() => {
+    if (!user) { setIsAdmin(false); return; }
+    authFetch("/api/check-admin")
+      .then((res) => res.json())
+      .then((data) => setIsAdmin(data.isAdmin))
+      .catch(() => setIsAdmin(false));
+  }, [user]);
 
   /* 🔎 SEARCH WITH IMAGE + PRICE */
   useEffect(() => {
@@ -195,7 +206,7 @@ export default function Header() {
                 />
                 {profileOpen && (
                   <div className="absolute right-0 mt-3 w-52 bg-white border rounded-lg shadow-lg z-50">
-                    {user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL && (
+                    {isAdmin && (
                       <Link href="/admin" className="block px-4 py-2 text-sm text-indigo-600 font-semibold hover:bg-gray-100">
                         Admin Dashboard
                       </Link>

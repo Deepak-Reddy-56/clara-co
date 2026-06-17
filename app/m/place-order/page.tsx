@@ -4,11 +4,10 @@ import { useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
-import { placeOrder } from "@/lib/placeOrder";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { authFetch } from "@/lib/authClient";
 
-/* 🔥 TYPE FIX (ONLY FOR TS, NO RUNTIME CHANGE) */
 type Address = {
   id: string;
   fullName?: string;
@@ -34,7 +33,7 @@ function PlaceOrderContent() {
     if (!user || !addressId || cart.length === 0) return;
 
     const run = async () => {
-      // 🔥 FETCH FULL ADDRESS
+      // Fetch full address
       const docRef = doc(db, "addresses", addressId);
       const snap = await getDoc(docRef);
 
@@ -44,50 +43,60 @@ function PlaceOrderContent() {
         return;
       }
 
-      // 🔥 TYPE-SAFE ADDRESS
       const address: Address = {
         id: snap.id,
         ...(snap.data() as Omit<Address, "id">),
       };
 
-      console.log("ADDRESS BEING SENT:", address);
-
-      // 🔥 PLACE ORDER (DESKTOP COMPATIBLE)
-      const result = await placeOrder(cart, user, address);
-
-      if (result.success) {
-        const total = cart.reduce(
-          (sum, item) => sum + item.price * item.quantity,
-          0
-        );
-
-        // 🔥 SAME TELEGRAM LOGIC AS DESKTOP
-        await fetch("/api/notify-admin", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
+      // 🔐 Place order via server-side API (validates prices)
+      const orderRes = await authFetch("/api/place-order", {
+        method: "POST",
+        body: JSON.stringify({
+          cart: cart.map((item) => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+          })),
+          shippingDetails: {
+            name: address.fullName || "",
+            email: user.email || "",
+            phone: address.phone || "",
+            address: address.street || address.address || "",
+            city: address.city || "",
+            zip: address.postal || address.zip || "",
           },
-          body: JSON.stringify({
-            orderId: result.orderId,
-            customerName: user.displayName,
-            email: user.email,
-            phone: address.phone || "N/A",
-            address: {
-              street: address.street || address.address || "—",
-              city: address.city || "—",
-              postal: address.postal || address.zip || "—",
-            },
-            items: cart,
-            total,
-          }),
-        });
+        }),
+      });
 
-        clearCart();
-        router.push("/m/success");
-      } else {
-        alert("Order failed ❌");
+      const orderData = await orderRes.json();
+
+      if (!orderRes.ok) {
+        alert(orderData.error || "Order failed ❌");
         router.push("/m/cart");
+        return;
       }
+
+      // 🔔 Notify admin via Telegram (authenticated)
+      await authFetch("/api/notify-admin", {
+        method: "POST",
+        body: JSON.stringify({
+          orderId: orderData.orderId,
+          customerName: user.displayName,
+          email: user.email,
+          phone: address.phone || "N/A",
+          address: {
+            street: address.street || address.address || "—",
+            city: address.city || "—",
+            postal: address.postal || address.zip || "—",
+          },
+          items: cart,
+          total: orderData.total,
+        }),
+      });
+
+      clearCart();
+      router.push("/m/success");
     };
 
     run();

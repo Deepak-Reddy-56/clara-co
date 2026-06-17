@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
+import { authFetch } from "@/lib/authClient";
 
 type OrderStatus = "PENDING" | "PAID" | "SHIPPED" | "DELIVERED";
 
@@ -78,12 +79,16 @@ export default function AdminOrdersPage() {
       return;
     }
 
-    if (user.email !== process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
-      router.push("/");
-      return;
-    }
-
-    setAuthorized(true);
+    authFetch("/api/check-admin")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.isAdmin) {
+          router.push("/");
+        } else {
+          setAuthorized(true);
+        }
+      })
+      .catch(() => router.push("/"));
   }, [loading, router, user]);
 
   useEffect(() => {

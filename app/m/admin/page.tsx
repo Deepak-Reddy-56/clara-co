@@ -10,6 +10,7 @@ import {
 import { db } from "@/lib/firebase";
 import { ChevronDown, ChevronUp, Plus, Save, Trash2, Package, ShoppingBag, LogOut } from "lucide-react";
 import AddProductModal from "@/components/AddProductModal";
+import { authFetch } from "@/lib/authClient";
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -129,15 +130,20 @@ export default function MobileAdminPage() {
   const [deliveryDates, setDeliveryDates] = useState<Record<string, string>>({});
   const [trackingLinks, setTrackingLinks] = useState<Record<string, string>>({});
 
-  // ── Auth guard ──────────────────────────────────────────
+  // ── Auth guard (server-side) ──────────────────────────────
   useEffect(() => {
     if (loading) return;
     if (!user) { router.push("/m/login"); return; }
-    if (user.email !== process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
-      router.push("/m/shop");
-      return;
-    }
-    setAuthorized(true);
+    authFetch("/api/check-admin")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.isAdmin) {
+          router.push("/m/shop");
+        } else {
+          setAuthorized(true);
+        }
+      })
+      .catch(() => router.push("/m/shop"));
   }, [user, loading, router]);
 
   // ── Load products ───────────────────────────────────────
@@ -184,35 +190,55 @@ export default function MobileAdminPage() {
       return { ...x, sections: s.includes(section) ? s.filter((v) => v !== section) : [...s, section] };
     }));
 
+  // ☁️ Upload image to Cloudinary (via server-side API)
+  const uploadToCloudinary = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await authFetch("/api/upload-image", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || "Upload failed");
+    }
+
+    const data = await res.json();
+    return data.secure_url;
+  };
+
   const handleAddProductSave = async (data: any) => {
     setSaving(true);
-    const newUrls = [];
-    for (const f of data.brandNewFiles || []) {
-      const formData = new FormData();
-      formData.append("file", f);
-      formData.append("upload_preset", "unsigned_preset");
-      const res = await fetch("https://api.cloudinary.com/v1_1/dc2a3idlt/image/upload", { method: "POST", body: formData });
-      const resData = await res.json();
-      newUrls.push(resData.secure_url);
-    }
-    
-    const newProduct = {
-      name: data.name,
-      price: data.price,
-      discount: data.discount,
-      category: data.category,
-      inStock: data.inStock,
-      sections: data.sections,
-      image: newUrls.length > 0 ? newUrls[0] : "",
-      images: newUrls,
-      createdAt: serverTimestamp(),
-    };
+    try {
+      const newUrls = [];
+      for (const f of data.brandNewFiles || []) {
+        const url = await uploadToCloudinary(f);
+        newUrls.push(url);
+      }
+      
+      const newProduct = {
+        name: data.name,
+        price: data.price,
+        discount: data.discount,
+        category: data.category,
+        inStock: data.inStock,
+        sections: data.sections,
+        image: newUrls.length > 0 ? newUrls[0] : "",
+        images: newUrls,
+        createdAt: serverTimestamp(),
+      };
 
-    const ref = await addDoc(collection(db, "products"), newProduct);
-    const newP = { id: ref.id, ...newProduct } as Product;
-    setProducts((p) => [newP, ...p]);
-    setExpandedProduct(ref.id);
-    setSaving(false);
+      const ref = await addDoc(collection(db, "products"), newProduct);
+      const newP = { id: ref.id, ...newProduct } as Product;
+      setProducts((p) => [newP, ...p]);
+      setExpandedProduct(ref.id);
+    } catch (err: any) {
+      alert("Error adding product: " + err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const deleteProduct = async (id: string) => {
@@ -234,13 +260,14 @@ export default function MobileAdminPage() {
 
   const uploadImage = async (id: string, file: File) => {
     setUploading(id);
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "unsigned_preset");
-    const res = await fetch("https://api.cloudinary.com/v1_1/dc2a3idlt/image/upload", { method: "POST", body: formData });
-    const data = await res.json();
-    updateField(id, "image", data.secure_url);
-    setUploading(null);
+    try {
+      const secureUrl = await uploadToCloudinary(file);
+      updateField(id, "image", secureUrl);
+    } catch (err: any) {
+      alert("Upload failed: " + err.message);
+    } finally {
+      setUploading(null);
+    }
   };
 
   // ── Order helpers ───────────────────────────────────────
@@ -400,18 +427,19 @@ export default function MobileAdminPage() {
                           if (!files.length) return;
                           
                           setUploading(product.id!);
-                          const newUrls = [];
-                          for (const f of files) {
-                            const formData = new FormData();
-                            formData.append("file", f);
-                            formData.append("upload_preset", "unsigned_preset");
-                            const res = await fetch("https://api.cloudinary.com/v1_1/dc2a3idlt/image/upload", { method: "POST", body: formData });
-                            const data = await res.json();
-                            newUrls.push(data.secure_url);
+                          try {
+                            const newUrls = [];
+                            for (const f of files) {
+                              const url = await uploadToCloudinary(f);
+                              newUrls.push(url);
+                            }
+                            const current = product.images || (product.image ? [product.image] : []);
+                            updateField(product.id!, "images", [...current, ...newUrls]);
+                          } catch (err: any) {
+                            alert("Upload failed: " + err.message);
+                          } finally {
+                            setUploading(null);
                           }
-                          const current = product.images || (product.image ? [product.image] : []);
-                          updateField(product.id!, "images", [...current, ...newUrls]);
-                          setUploading(null);
                         }}
                         style={{ fontSize: "12px", marginBottom: "6px" }}
                       />

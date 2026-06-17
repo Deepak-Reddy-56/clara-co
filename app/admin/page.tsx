@@ -14,6 +14,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import AddProductModal from "@/components/AddProductModal";
+import { authFetch } from "@/lib/authClient";
 
 type Product = {
   id?: string;
@@ -34,7 +35,7 @@ export default function AdminPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  // 🔐 Admin auth check
+  // 🔐 Admin auth check (server-side)
   useEffect(() => {
     if (loading) return;
 
@@ -43,12 +44,16 @@ export default function AdminPage() {
       return;
     }
 
-    if (user.email !== process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
-      router.push("/");
-      return;
-    }
-
-    setAuthorized(true);
+    authFetch("/api/check-admin")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.isAdmin) {
+          router.push("/");
+        } else {
+          setAuthorized(true);
+        }
+      })
+      .catch(() => router.push("/"));
   }, [user, loading, router]);
 
   // 📦 Load products from Firestore
@@ -108,26 +113,30 @@ export default function AdminPage() {
 
   // ➕ Add new product
   const handleAddProductSave = async (data: any) => {
-    const newUrls = await Promise.all(data.brandNewFiles.map((f: File) => uploadToCloudinary(f)));
-    
-    const newProduct = {
-      name: data.name,
-      price: data.price,
-      discount: data.discount,
-      category: data.category,
-      inStock: data.inStock,
-      sections: data.sections,
-      image: newUrls.length > 0 ? newUrls[0] : "",
-      images: newUrls,
-      createdAt: serverTimestamp(),
-    };
+    try {
+      const newUrls = await Promise.all(data.brandNewFiles.map((f: File) => uploadToCloudinary(f)));
+      
+      const newProduct = {
+        name: data.name,
+        price: data.price,
+        discount: data.discount,
+        category: data.category,
+        inStock: data.inStock,
+        sections: data.sections,
+        image: newUrls.length > 0 ? newUrls[0] : "",
+        images: newUrls,
+        createdAt: serverTimestamp(),
+      };
 
-    const docRef = await addDoc(collection(db, "products"), newProduct);
+      const docRef = await addDoc(collection(db, "products"), newProduct);
 
-    setProducts((prev) => [
-      { id: docRef.id, ...newProduct } as Product,
-      ...prev,
-    ]);
+      setProducts((prev) => [
+        { id: docRef.id, ...newProduct } as Product,
+        ...prev,
+      ]);
+    } catch (err: any) {
+      alert("Error adding product: " + err.message);
+    }
   };
 
   // 💾 Save edits to Firestore
@@ -143,16 +152,20 @@ export default function AdminPage() {
     alert("Changes saved!");
   };
 
-  // ☁️ Upload image to Cloudinary
+  // ☁️ Upload image to Cloudinary (via server-side API)
   const uploadToCloudinary = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("upload_preset", "unsigned_preset");
 
-    const res = await fetch(
-      "https://api.cloudinary.com/v1_1/dc2a3idlt/image/upload",
-      { method: "POST", body: formData }
-    );
+    const res = await authFetch("/api/upload-image", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || "Upload failed");
+    }
 
     const data = await res.json();
     return data.secure_url;

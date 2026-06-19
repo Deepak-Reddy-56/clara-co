@@ -66,7 +66,7 @@ button:disabled {
 
 .input:focus {
   border-color: black;
-  box-shadow: 0 0 0 2px rgba(0,0,0,0.08);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.08);
 }
 
 /* ================= MOBILE LAYOUT ================= */
@@ -96,7 +96,7 @@ button:disabled {
   position: sticky;
   top: 0;
   z-index: 200;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 .mobile-header h1 {
@@ -121,7 +121,7 @@ button:disabled {
 .sidebar-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.3);
+  background: rgba(0, 0, 0, 0.3);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
@@ -198,7 +198,7 @@ button:disabled {
   justify-content: space-around;
   align-items: center;
   z-index: 1000;
-  box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
 }
 
 .nav-item {
@@ -295,7 +295,7 @@ button:disabled {
   border-radius: 16px;
 
   border: 1px solid #eaeaea;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 
   cursor: pointer;
 
@@ -306,13 +306,14 @@ button:disabled {
 /* Hover (desktop) */
 .product-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
 /* 🔥 STRONGER PRESS */
 .product-card:active {
-  transform: scale(0.92); /* stronger so you SEE it */
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  transform: scale(0.92);
+  /* stronger so you SEE it */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
 
@@ -377,11 +378,9 @@ button:disabled {
 .style-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.15),
-    rgba(0, 0, 0, 0.5)
-  );
+  background: linear-gradient(to bottom,
+      rgba(0, 0, 0, 0.15),
+      rgba(0, 0, 0, 0.5));
 }
 
 /* ===== Buttons ===== */
@@ -422,7 +421,7 @@ button:disabled {
   scroll-snap-type: x mandatory;
 }
 
-.horizontal-scroll > div {
+.horizontal-scroll>div {
   scroll-snap-align: start;
 }
 
@@ -433,7 +432,7 @@ button:disabled {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0, 0, 0, 0.4);
 
   display: flex;
   justify-content: center;
@@ -468,6 +467,7 @@ button:disabled {
   from {
     transform: translateY(100%);
   }
+
   to {
     transform: translateY(0);
   }
@@ -476,7 +476,8 @@ button:disabled {
 /* image FIX */
 .modal-image {
   width: 100%;
-  height: 180px; /* 🔥 important */
+  height: 180px;
+  /* 🔥 important */
   border-radius: 12px;
   background-size: cover;
   background-position: center;
@@ -550,3 +551,47 @@ button:disabled {
   border-radius: 999px;
 }
 
+/* ===== Brand Strip Marquee Animation ===== */
+@keyframes marquee {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.marquee-container {
+  overflow: hidden;
+  white-space: nowrap;
+  width: 100%;
+  position: relative;
+}
+
+.marquee-container::before,
+.marquee-container::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 120px;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.marquee-container::before {
+  left: 0;
+  background: linear-gradient(to right, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+.marquee-container::after {
+  right: 0;
+  background: linear-gradient(to left, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+.marquee-content {
+  display: flex;
+  width: max-content;
+  animation: marquee 15s linear infinite;
+}

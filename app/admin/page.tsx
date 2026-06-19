@@ -10,6 +10,8 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  getDoc,
+  setDoc,
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -34,6 +36,12 @@ export default function AdminPage() {
   const [authorized, setAuthorized] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  // 🎠 Carousel States
+  const [carouselSectionName, setCarouselSectionName] = useState("");
+  const [carouselImages, setCarouselImages] = useState<{ url: string; link: string }[]>([]);
+  const [carouselLoading, setCarouselLoading] = useState(true);
+  const [carouselSaving, setCarouselSaving] = useState(false);
 
   // 🔐 Admin auth check (server-side)
   useEffect(() => {
@@ -71,6 +79,49 @@ export default function AdminPage() {
 
     loadProducts();
   }, [authorized]);
+
+  // 🎠 Load Carousel Settings from Firestore
+  useEffect(() => {
+    if (!authorized) return;
+    const loadCarousel = async () => {
+      try {
+        const docRef = doc(db, "settings", "carousel");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setCarouselSectionName(data.sectionName || "");
+          setCarouselImages(data.images || []);
+        } else {
+          setCarouselSectionName("Exclusive Drops");
+          setCarouselImages([
+            { url: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=1200", link: "/shop" }
+          ]);
+        }
+      } catch (err) {
+        console.error("Failed to load carousel settings:", err);
+      } finally {
+        setCarouselLoading(false);
+      }
+    };
+    loadCarousel();
+  }, [authorized]);
+
+  // 💾 Save Carousel Settings to Firestore
+  const saveCarouselSettings = async () => {
+    setCarouselSaving(true);
+    try {
+      const docRef = doc(db, "settings", "carousel");
+      await setDoc(docRef, {
+        sectionName: carouselSectionName,
+        images: carouselImages.filter(img => img.url.trim() !== ""),
+      });
+      alert("Homepage carousel settings saved successfully!");
+    } catch (err: any) {
+      alert("Error saving carousel settings: " + err.message);
+    } finally {
+      setCarouselSaving(false);
+    }
+  };
 
   if (!authorized) return null;
 
@@ -206,7 +257,166 @@ export default function AdminPage() {
       </button>
       </div>
 
-       
+      {/* 🎠 Homepage Carousel Settings Panel */}
+      <div className="bg-white p-6 rounded-xl shadow-sm border mb-8 space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b pb-4">
+          <div>
+            <h2 className="text-xl font-bold text-gray-800">Homepage Carousel Settings</h2>
+            <p className="text-sm text-gray-500">Manage the auto-scrolling promo banner images (up to 5) and the section title.</p>
+          </div>
+          <button
+            onClick={saveCarouselSettings}
+            disabled={carouselSaving || carouselLoading}
+            className="bg-black text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 transition flex-shrink-0"
+          >
+            {carouselSaving ? "Saving..." : "Save Carousel Settings"}
+          </button>
+        </div>
+
+        {carouselLoading ? (
+          <p className="text-gray-500">Loading settings...</p>
+        ) : (
+          <div className="space-y-4">
+            {/* Section Title Input */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Section Title</label>
+              <input
+                type="text"
+                className="w-full border p-2.5 rounded-lg"
+                placeholder="e.g., Exclusive Deals, Trending Styles"
+                value={carouselSectionName}
+                onChange={(e) => setCarouselSectionName(e.target.value)}
+              />
+            </div>
+
+            {/* Banner Slots */}
+            <div className="space-y-4">
+              <label className="block text-sm font-semibold text-gray-700">Banner Images (Max 5)</label>
+              
+              <div className="grid gap-4">
+                {carouselImages.map((image, index) => (
+                  <div key={index} className="flex flex-col sm:flex-row gap-4 p-4 border rounded-lg bg-gray-50 relative group">
+                    {/* Image Preview */}
+                    <div className="w-full sm:w-32 h-20 flex-shrink-0 border rounded-lg overflow-hidden bg-gray-200 relative">
+                      {image.url ? (
+                        <img src={image.url} className="w-full h-full object-cover" alt={`Banner ${index + 1}`} />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">No Image</div>
+                      )}
+                    </div>
+
+                    {/* URL and Link Fields */}
+                    <div className="flex-1 space-y-2">
+                      <div className="flex gap-2 items-center">
+                        <input
+                          type="text"
+                          className="flex-1 border p-1.5 rounded text-sm bg-white"
+                          placeholder="Image URL"
+                          value={image.url}
+                          onChange={(e) => {
+                            const updated = [...carouselImages];
+                            updated[index].url = e.target.value;
+                            setCarouselImages(updated);
+                          }}
+                        />
+                        
+                        {/* File Upload for specific slot */}
+                        <label className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded text-sm cursor-pointer whitespace-nowrap select-none">
+                          Upload
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              try {
+                                const url = await uploadToCloudinary(file);
+                                const updated = [...carouselImages];
+                                updated[index].url = url;
+                                setCarouselImages(updated);
+                              } catch (err: any) {
+                                alert("Upload failed: " + err.message);
+                              }
+                            }}
+                          />
+                        </label>
+                      </div>
+
+                      <input
+                        type="text"
+                        className="w-full border p-1.5 rounded text-sm bg-white"
+                        placeholder="Redirect Link (e.g. /shop, /product/abc)"
+                        value={image.link}
+                        onChange={(e) => {
+                          const updated = [...carouselImages];
+                          updated[index].link = e.target.value;
+                          setCarouselImages(updated);
+                        }}
+                      />
+                    </div>
+
+                    {/* Slot Management Buttons */}
+                    <div className="flex sm:flex-col justify-between sm:justify-end gap-2 items-center sm:items-end">
+                      <div className="flex gap-1">
+                        <button
+                          disabled={index === 0}
+                          onClick={() => {
+                            const updated = [...carouselImages];
+                            const temp = updated[index];
+                            updated[index] = updated[index - 1];
+                            updated[index - 1] = temp;
+                            setCarouselImages(updated);
+                          }}
+                          className="p-1 border rounded bg-white text-xs disabled:opacity-30 hover:bg-gray-100 font-bold"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          disabled={index === carouselImages.length - 1}
+                          onClick={() => {
+                            const updated = [...carouselImages];
+                            const temp = updated[index];
+                            updated[index] = updated[index + 1];
+                            updated[index + 1] = temp;
+                            setCarouselImages(updated);
+                          }}
+                          className="p-1 border rounded bg-white text-xs disabled:opacity-30 hover:bg-gray-100 font-bold"
+                        >
+                          ▼
+                        </button>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setCarouselImages(carouselImages.filter((_, i) => i !== index));
+                        }}
+                        className="px-2 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded text-xs font-semibold"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                {carouselImages.length === 0 && (
+                  <p className="text-sm text-gray-500 py-2">No banners added yet. Add a banner below.</p>
+                )}
+
+                {carouselImages.length < 5 && (
+                  <button
+                    onClick={() => {
+                      setCarouselImages([...carouselImages, { url: "", link: "" }]);
+                    }}
+                    className="border-2 border-dashed border-gray-300 hover:border-gray-400 py-3 rounded-lg text-sm text-gray-600 font-semibold hover:bg-gray-50 transition"
+                  >
+                    + Add Banner Slot (Max 5)
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="space-y-8">
         {products.map((product) => (

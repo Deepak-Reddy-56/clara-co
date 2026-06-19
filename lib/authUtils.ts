@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import * as jose from "jose";
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL; // server-only (no NEXT_PUBLIC_ prefix)
+const ADMIN_EMAILS = process.env.ADMIN_EMAIL
+  ? process.env.ADMIN_EMAIL.split(",").map((email) => email.trim().toLowerCase())
+  : [];
 const FIREBASE_PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 
 const JWKS = jose.createRemoteJWKSet(
@@ -39,7 +41,7 @@ export async function verifyAuth(req: Request): Promise<AuthResult | null> {
     return {
       uid: payload.sub as string,
       email: payload.email as string | undefined,
-      isAdmin: payload.email === ADMIN_EMAIL,
+      isAdmin: typeof payload.email === "string" ? ADMIN_EMAILS.includes(payload.email.toLowerCase()) : false,
     };
   } catch (err) {
     console.error("JWT Verification failed:", err);

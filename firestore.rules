@@ -10,6 +10,14 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    // ─── Settings ────────────────────────────────────────
+    // Anyone can read settings (e.g. carousel banners)
+    // Only admin can write settings
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // ─── Orders ─────────────────────────────────────────
     // Direct client creation is disabled (forced through server-side validation /api/place-order)
     // Users can read only their own orders
@@ -50,7 +58,7 @@ service cloud.firestore {
 
     function isAdmin() {
       return request.auth != null
-             && request.auth.token.email == 'kothurisaideepak@gmail.com';
+             && request.auth.token.email in ['kothurisaideepak@gmail.com', 'nisargakaratagi1234@gmail.com'];
     }
   }
 }

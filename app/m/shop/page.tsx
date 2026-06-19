@@ -6,6 +6,7 @@ import { Search, X } from "lucide-react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import ProductCard from "@/components/mobile/ProductCard";
+import PromoCarousel from "@/components/PromoCarousel";
 
 // ── Types ─────────────────────────────────────────────
 
@@ -170,25 +171,8 @@ export default function MobileShopPage() {
         </div>
       ) : (
         <>
-          {/* ── HERO ── */}
-          <section
-            className="hero-banner"
-            style={{
-              backgroundImage: "url(https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=1200)",
-              backgroundSize: "cover",
-              backgroundPosition: "center top",
-              position: "relative",
-            }}
-          >
-            <div style={{
-              position: "absolute", inset: 0,
-              background: "linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0.55))",
-            }} />
-            <div className="hero-content" style={{ position: "relative", zIndex: 1 }}>
-              <h2>New Season Drop</h2>
-              <Link href="/m/styles" className="hero-btn">Shop Now</Link>
-            </div>
-          </section>
+          {/* ── HERO CAROUSEL ── */}
+          <PromoCarousel variant="mobile-hero" />
 
           {/* ── NEW ARRIVALS ── */}
           <SectionTitle title="New Arrivals" link="/m/new" />

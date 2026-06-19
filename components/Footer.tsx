@@ -1,3 +1,5 @@
+import { MapPin, Phone } from "lucide-react";
+
 export default function Footer() {
   return (
     <footer className="bg-gray-100 mt-16 pt-16 pb-8 text-gray-800">
@@ -15,14 +17,37 @@ export default function Footer() {
         {/* Store Address */}
         <div>
           <h4 className="font-semibold mb-4">Our Store</h4>
-          <ul className="space-y-2 text-sm text-gray-600">
-            <li>CLARA & CO, </li>
-            <li>beside DPS School, Opp to Marluce Bakery</li>
-            <li>Warangal, Telangana 506004</li>
-            <li>India</li>
-            <li>Phone: +91 7981608099</li>
-            <li><a href="https://maps.app.goo.gl/GqrYLPmLuUaT9CUS6?g_st=ac" target="_blank">Location</a></li>
-          </ul>
+          <div className="space-y-4 text-sm text-gray-600">
+            <div className="flex gap-2.5">
+              <MapPin size={18} className="text-rose-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold text-gray-900 leading-tight">CLARA & CO</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  beside DPS School, Opp to Marluce Bakery
+                </p>
+                <p className="text-xs text-gray-500">
+                  Warangal, Telangana 506004, India
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5">
+              <Phone size={15} className="text-emerald-500 flex-shrink-0" />
+              <span className="text-gray-700 font-semibold text-xs">+91 8374994838</span>
+            </div>
+
+            <div className="pt-1">
+              <a 
+                href="https://maps.app.goo.gl/GqrYLPmLuUaT9CUS6?g_st=ac" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-rose-500 via-pink-500 to-orange-500 hover:from-rose-600 hover:to-orange-600 text-white rounded-xl text-xs font-bold shadow-sm hover:shadow transition-all duration-200 transform hover:-translate-y-0.5"
+              >
+                <span>Navigate on Google Maps</span>
+                <span>→</span>
+              </a>
+            </div>
+          </div>
         </div>
 
         {/* Customer Care */}

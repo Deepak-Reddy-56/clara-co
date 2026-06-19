@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {
   collection, getDocs, addDoc, updateDoc, deleteDoc,
-  doc, serverTimestamp, orderBy, query,
+  doc, getDoc, setDoc, serverTimestamp, orderBy, query,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { ChevronDown, ChevronUp, Plus, Save, Trash2, Package, ShoppingBag, LogOut } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, Save, Trash2, Package, ShoppingBag, LogOut, Sliders } from "lucide-react";
 import AddProductModal from "@/components/AddProductModal";
 import { authFetch } from "@/lib/authClient";
 
@@ -113,8 +113,57 @@ export default function MobileAdminPage() {
   const router = useRouter();
 
   const [authorized, setAuthorized] = useState(false);
-  const [tab, setTab] = useState<"products" | "orders">("products");
+  const [tab, setTab] = useState<"products" | "orders" | "carousel">("products");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  // 🎠 Carousel States
+  const [carouselSectionName, setCarouselSectionName] = useState("");
+  const [carouselImages, setCarouselImages] = useState<{ url: string; link: string }[]>([]);
+  const [carouselLoading, setCarouselLoading] = useState(true);
+  const [carouselSaving, setCarouselSaving] = useState(false);
+  const [uploadingCarouselIndex, setUploadingCarouselIndex] = useState<number | null>(null);
+
+  // Load carousel settings
+  useEffect(() => {
+    if (!authorized) return;
+    const loadCarousel = async () => {
+      try {
+        const docRef = doc(db, "settings", "carousel");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setCarouselSectionName(data.sectionName || "");
+          setCarouselImages(data.images || []);
+        } else {
+          setCarouselSectionName("Exclusive Drops");
+          setCarouselImages([
+            { url: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=1200", link: "/shop" }
+          ]);
+        }
+      } catch (err) {
+        console.error("Failed to load carousel settings:", err);
+      } finally {
+        setCarouselLoading(false);
+      }
+    };
+    loadCarousel();
+  }, [authorized]);
+
+  const saveCarouselSettings = async () => {
+    setCarouselSaving(true);
+    try {
+      const docRef = doc(db, "settings", "carousel");
+      await setDoc(docRef, {
+        sectionName: carouselSectionName,
+        images: carouselImages.filter(img => img.url.trim() !== ""),
+      });
+      alert("Carousel settings saved successfully!");
+    } catch (err: any) {
+      alert("Error saving carousel settings: " + err.message);
+    } finally {
+      setCarouselSaving(false);
+    }
+  };
 
   // Products state
   const [products, setProducts] = useState<Product[]>([]);
@@ -306,7 +355,7 @@ export default function MobileAdminPage() {
 
       {/* ── Tabs ── */}
       <div style={{ display: "flex", padding: "0 16px", gap: "8px", borderBottom: "1px solid #f0f0f0", background: "white" }}>
-        {(["products", "orders"] as const).map((t) => (
+        {(["products", "orders", "carousel"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -317,8 +366,8 @@ export default function MobileAdminPage() {
               display: "flex", alignItems: "center", gap: "6px", textTransform: "capitalize",
             }}
           >
-            {t === "products" ? <Package size={14} /> : <ShoppingBag size={14} />}
-            {t === "products" ? "Products" : "Orders"}
+            {t === "products" ? <Package size={14} /> : t === "orders" ? <ShoppingBag size={14} /> : <Sliders size={14} />}
+            {t === "products" ? "Products" : t === "orders" ? "Orders" : "Carousel"}
           </button>
         ))}
       </div>
@@ -650,7 +699,200 @@ export default function MobileAdminPage() {
         </div>
       )}
 
+      {/* ══════════ CAROUSEL TAB ══════════ */}
+      {tab === "carousel" && (
+        <div style={{ padding: "16px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+            <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#111" }}>Homepage Carousel</h2>
+            <button
+              onClick={saveCarouselSettings}
+              disabled={carouselSaving || carouselLoading}
+              style={btn(carouselSaving ? "#9ca3af" : "#16a34a")}
+            >
+              <Save size={14} /> {carouselSaving ? "Saving..." : "Save Settings"}
+            </button>
+          </div>
+
+          {carouselLoading ? (
+            <p style={{ textAlign: "center", color: "#aaa", fontSize: "13px", padding: "40px" }}>Loading settings...</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              {/* Section Name */}
+              <div style={card}>
+                <div style={{ padding: "14px" }}>
+                  <label style={{ fontSize: "11px", color: "#888", fontWeight: 600, display: "block", marginBottom: "6px" }}>
+                    Section Title
+                  </label>
+                  <input
+                    style={inputSt}
+                    placeholder="e.g., Exclusive Drops"
+                    value={carouselSectionName}
+                    onChange={(e) => setCarouselSectionName(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Banners */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                <p style={{ fontSize: "13px", fontWeight: 700, color: "#444" }}>Banner Images (Max 5)</p>
+
+                {carouselImages.map((image, index) => (
+                  <div key={index} style={{ ...card, padding: "12px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                    <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                      {/* Preview */}
+                      <div
+                        style={{
+                          width: "70px",
+                          height: "50px",
+                          borderRadius: "8px",
+                          backgroundImage: `url(${image.url || "https://via.placeholder.com/70"})`,
+                          backgroundSize: "cover",
+                          backgroundPosition: "center",
+                          backgroundColor: "#f5f5f5",
+                          flexShrink: 0,
+                        }}
+                      />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: "12px", fontWeight: 600, color: "#111" }}>Banner Slot #{index + 1}</p>
+                        <p style={{ fontSize: "11px", color: "#aaa", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
+                          {image.url || "No image url set"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Image URL Input / Upload */}
+                    <div>
+                      <label style={{ fontSize: "10px", color: "#888", fontWeight: 600, display: "block", marginBottom: "4px" }}>Image Source</label>
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        <input
+                          style={{ ...inputSt, flex: 1 }}
+                          placeholder="Image URL"
+                          value={image.url}
+                          onChange={(e) => {
+                            const updated = [...carouselImages];
+                            updated[index].url = e.target.value;
+                            setCarouselImages(updated);
+                          }}
+                        />
+                        <label style={{
+                          padding: "8px 12px", background: "#f3f4f6", border: "1px solid #d1d5db", borderRadius: "8px",
+                          fontSize: "12px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center"
+                        }}>
+                          Upload
+                          <input
+                            type="file"
+                            accept="image/*"
+                            style={{ display: "none" }}
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              setUploadingCarouselIndex(index);
+                              try {
+                                const url = await uploadToCloudinary(file);
+                                const updated = [...carouselImages];
+                                updated[index].url = url;
+                                setCarouselImages(updated);
+                              } catch (err: any) {
+                                alert("Upload failed: " + err.message);
+                              } finally {
+                                setUploadingCarouselIndex(null);
+                              }
+                            }}
+                          />
+                        </label>
+                      </div>
+                      {uploadingCarouselIndex === index && <p style={{ fontSize: "11px", color: "#888", marginTop: "4px" }}>Uploading...</p>}
+                    </div>
+
+                    {/* Redirect link */}
+                    <div>
+                      <label style={{ fontSize: "10px", color: "#888", fontWeight: 600, display: "block", marginBottom: "4px" }}>Redirect Link</label>
+                      <input
+                        style={inputSt}
+                        placeholder="e.g. /m/styles/casual"
+                        value={image.link}
+                        onChange={(e) => {
+                          const updated = [...carouselImages];
+                          updated[index].link = e.target.value;
+                          setCarouselImages(updated);
+                        }}
+                      />
+                    </div>
+
+                    {/* Management buttons */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "4px" }}>
+                      <div style={{ display: "flex", gap: "6px" }}>
+                        <button
+                          disabled={index === 0}
+                          onClick={() => {
+                            const updated = [...carouselImages];
+                            const temp = updated[index];
+                            updated[index] = updated[index - 1];
+                            updated[index - 1] = temp;
+                            setCarouselImages(updated);
+                          }}
+                          style={{
+                            padding: "4px 8px", background: "white", border: "1px solid #d1d5db", borderRadius: "4px",
+                            fontSize: "10px", fontWeight: 700, cursor: "pointer", opacity: index === 0 ? 0.3 : 1
+                          }}
+                        >
+                          ▲ Move Up
+                        </button>
+                        <button
+                          disabled={index === carouselImages.length - 1}
+                          onClick={() => {
+                            const updated = [...carouselImages];
+                            const temp = updated[index];
+                            updated[index] = updated[index + 1];
+                            updated[index + 1] = temp;
+                            setCarouselImages(updated);
+                          }}
+                          style={{
+                            padding: "4px 8px", background: "white", border: "1px solid #d1d5db", borderRadius: "4px",
+                            fontSize: "10px", fontWeight: 700, cursor: "pointer", opacity: index === carouselImages.length - 1 ? 0.3 : 1
+                          }}
+                        >
+                          ▼ Move Down
+                        </button>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setCarouselImages(carouselImages.filter((_, i) => i !== index));
+                        }}
+                        style={{
+                          padding: "4px 8px", background: "#fef2f2", color: "#b91c1c", border: "1px solid #fca5a5",
+                          borderRadius: "4px", fontSize: "10px", fontWeight: 700, cursor: "pointer"
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                {carouselImages.length === 0 && (
+                  <p style={{ textAlign: "center", fontSize: "13px", color: "#aaa", padding: "16px" }}>No banners added yet.</p>
+                )}
+
+                {carouselImages.length < 5 && (
+                  <button
+                    onClick={() => setCarouselImages([...carouselImages, { url: "", link: "" }])}
+                    style={{
+                      padding: "12px", border: "2px dashed #ccc", borderRadius: "12px", background: "none",
+                      fontSize: "13px", fontWeight: 600, color: "#666", cursor: "pointer"
+                    }}
+                  >
+                    + Add Banner Slot (Max 5)
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <AddProductModal 
+
         isOpen={isAddModalOpen} 
         onClose={() => setIsAddModalOpen(false)} 
         onSave={handleAddProductSave} 

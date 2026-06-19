@@ -1,14 +1,12 @@
+import PromoCarousel from "@/components/PromoCarousel";
+
 export default function Hero() {
   return (
     <section className="max-w-7xl mx-auto px-5 sm:px-6 pt-10 sm:pt-12 md:pt-16 pb-16 grid md:grid-cols-2 gap-10 md:gap-12 items-center">
 
-      {/* Image FIRST on mobile */}
-      <div className="relative order-first md:order-none">
-        <img
-          src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=1000"
-          alt="Fashion Model"
-          className="rounded-xl w-full object-cover max-h-[340px] sm:max-h-[450px] md:max-h-none"
-        />
+      {/* Image replaced by auto-scrolling promo carousel */}
+      <div className="relative order-first md:order-none w-full h-full min-h-[340px] sm:min-h-[450px]">
+        <PromoCarousel variant="desktop-hero" />
       </div>
 
       {/* Text */}
@@ -25,20 +23,6 @@ export default function Hero() {
           Shop Now
         </button>
 
-        <div className="grid grid-cols-3 gap-4 sm:gap-8 mt-10 sm:mt-12 text-black text-center">
-          <div>
-            <p className="text-xl sm:text-2xl md:text-3xl font-bold">200+</p>
-            <p className="text-gray-600 text-[11px] sm:text-sm">International Brands</p>
-          </div>
-          <div>
-            <p className="text-xl sm:text-2xl md:text-3xl font-bold">2,000+</p>
-            <p className="text-gray-600 text-[11px] sm:text-sm">High-Quality Products</p>
-          </div>
-          <div>
-            <p className="text-xl sm:text-2xl md:text-3xl font-bold">30,000+</p>
-            <p className="text-gray-600 text-[11px] sm:text-sm">Happy Customers</p>
-          </div>
-        </div>
       </div>
 
     </section>

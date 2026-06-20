@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { X } from "lucide-react";
 
 interface Props {
   product: any;
@@ -14,13 +15,26 @@ export default function ProductModal({ product, onClose }: Props) {
   const startY = useRef(0);
   const [translateY, setTranslateY] = useState(0);
   const [activeImage, setActiveImage] = useState(0);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const { user } = useAuth();
   const { cart, addToCart, increaseQty, decreaseQty } = useCart();
 
   useEffect(() => {
+    // Disable body scroll and overscroll-behavior to prevent page reload/pull-to-refresh
+    const originalOverflow = document.body.style.overflow;
+    const originalOverscroll = document.body.style.overscrollBehavior;
+
+    document.body.style.overflow = "hidden";
+    document.body.style.overscrollBehavior = "contain";
+
     // Entrance animation trigger
     requestAnimationFrame(() => setMounted(true));
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.overscrollBehavior = originalOverscroll;
+    };
   }, []);
 
   if (!product) return null;
@@ -44,16 +58,33 @@ export default function ProductModal({ product, onClose }: Props) {
     const currentY = e.touches[0].clientY;
     const diff = currentY - startY.current;
 
-    if (diff > 0) setTranslateY(diff);
+    if (diff > 0) {
+      // Only drag to close if the scrollable content is scrolled to the top
+      if (contentRef.current && contentRef.current.scrollTop > 0) {
+        return;
+      }
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+      setTranslateY(diff);
+    }
   };
 
   const handleTouchEnd = () => {
-    if (translateY > 120) {
-      setMounted(false);
-      setTimeout(onClose, 300); // Wait for exit animation
+    if (translateY > 100) {
+      handleClose();
     } else {
       setTranslateY(0);
     }
+  };
+
+  const handleClose = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setMounted(false);
+    setTimeout(onClose, 300);
   };
 
   return (
@@ -61,18 +92,15 @@ export default function ProductModal({ product, onClose }: Props) {
       {/* Backdrop overlay */}
       <div 
         className={`fixed inset-0 bg-black/60 z-[9998] transition-opacity duration-300 ${mounted ? "opacity-100" : "opacity-0"}`} 
-        onClick={() => {
-           setMounted(false);
-           setTimeout(onClose, 300);
-        }}
+        onClick={handleClose}
       />
       
       {/* Drawer */}
       <div
         className="fixed bottom-0 left-0 right-0 w-full bg-white z-[9999] flex flex-col rounded-t-[28px] overflow-hidden drop-shadow-2xl"
         style={{
-          transform: `translateY(${mounted ? translateY : 100}%)`,
-          transition: translateY === 0 ? "transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)" : "none",
+          transform: `translateY(${mounted ? `${translateY}px` : "100%"})`,
+          transition: (!mounted || translateY === 0) ? "transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)" : "none",
           maxHeight: "92vh",
         }}
         onClick={(e) => e.stopPropagation()}
@@ -80,13 +108,20 @@ export default function ProductModal({ product, onClose }: Props) {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Swipe Handle */}
-        <div className="w-full flex justify-center py-3 bg-white pb-1 pt-4">
+        {/* Swipe Handle & Close Button */}
+        <div className="w-full flex justify-between items-center py-3 bg-white pb-1 pt-4 px-5">
+          <div style={{ width: "32px" }} />
           <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+          <button 
+            onClick={handleClose} 
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 active:scale-90 transition-transform"
+          >
+            <X size={18} strokeWidth={2.5} />
+          </button>
         </div>
 
         {/* Scrollable Content Area */}
-        <div className="overflow-y-auto overflow-x-hidden flex-1 pb-32">
+        <div ref={contentRef} className="overflow-y-auto overflow-x-hidden flex-1 pb-32">
           
           {/* Gallery */}
           <div className="relative w-full bg-[#f8f9fa] pt-2">
@@ -97,10 +132,13 @@ export default function ProductModal({ product, onClose }: Props) {
                 const index = Math.round(el.scrollLeft / el.offsetWidth);
                 setActiveImage(index);
               }}
-              style={{ scrollBehavior: "smooth" }}
             >
               {images.map((img: string, i: number) => (
-                <div key={i} className="flex-none w-full min-h-[320px] snap-center px-4 flex items-center justify-center">
+                <div 
+                  key={i} 
+                  className="flex-none w-full min-h-[320px] snap-center snap-always px-4 flex items-center justify-center"
+                  style={{ scrollSnapStop: "always" }}
+                >
                   <img src={img} alt="" className="w-full h-full max-h-[350px] object-contain drop-shadow-sm mix-blend-multiply" />
                 </div>
               ))}

@@ -417,16 +417,8 @@ button:disabled {
   display: flex;
   gap: 12px;
   overflow-x: auto;
+  padding: 0 16px;
   scroll-snap-type: x mandatory;
-  padding: 0;
-}
-
-.horizontal-scroll > div:first-child {
-  margin-left: 16px;
-}
-
-.horizontal-scroll > div:last-child {
-  margin-right: 16px;
 }
 
 .horizontal-scroll>div {

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useCart } from "@/context/CartContext";
 import Toast from "./Toast";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { parseSizes } from "@/lib/products";
 
 export default function ProductModal({ product, onClose }: any) {
   const { addToCart } = useCart();
@@ -11,6 +12,12 @@ export default function ProductModal({ product, onClose }: any) {
   const [quantity, setQuantity] = useState(1);
   const [showToast, setShowToast] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
+
+  const sizeOptions = product && product.category === "clothes" ? parseSizes(product.sizeRange, product.outOfStockSizes) : [];
+  const [selectedSize, setSelectedSize] = useState<string>(() => {
+    const firstAvailable = sizeOptions.find(s => s.isAvailable);
+    return firstAvailable ? firstAvailable.size : (sizeOptions[0]?.size || "");
+  });
 
   if (!product) return null;
 
@@ -26,6 +33,7 @@ export default function ProductModal({ product, onClose }: any) {
         name: product.name,
         price: discountedPrice || product.price,
         image: product.image,
+        size: product.category === "clothes" ? selectedSize : undefined,
       });
     }
 
@@ -133,6 +141,65 @@ export default function ProductModal({ product, onClose }: any) {
                 <p className="text-[#B12704] font-bold text-lg">Currently Unavailable</p>
               )}
             </div>
+
+            {/* Sizes Selection */}
+            {product.category === "clothes" && sizeOptions.length > 0 && (
+              <div className="mb-6">
+                <span className="font-semibold text-gray-700 block mb-3 text-sm uppercase tracking-wider">Select Size</span>
+                <div className="flex flex-wrap gap-2.5">
+                  {sizeOptions.map((opt) => {
+                    const isSelected = selectedSize === opt.size;
+                    return (
+                      <button
+                        key={opt.size}
+                        disabled={!opt.isAvailable}
+                        onClick={() => setSelectedSize(opt.size)}
+                        style={{
+                          position: "relative",
+                          width: "44px",
+                          height: "44px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          border: isSelected ? "2px solid #000000" : "1px solid #cbd5e1",
+                          background: isSelected ? "#000000" : "#ffffff",
+                          color: isSelected ? "#ffffff" : "#0f172a",
+                          fontWeight: 700,
+                          fontSize: "14px",
+                          cursor: opt.isAvailable ? "pointer" : "not-allowed",
+                          transition: "all 0.15s ease",
+                          opacity: opt.isAvailable ? 1 : 0.45,
+                        }}
+                        className="rounded-lg shadow-sm"
+                      >
+                        {opt.size}
+                        
+                        {!opt.isAvailable && (
+                          <svg 
+                            style={{
+                              position: "absolute",
+                              inset: 0,
+                              width: "100%",
+                              height: "100%",
+                              pointerEvents: "none"
+                            }}
+                          >
+                            <line 
+                              x1="0" 
+                              y1="100%" 
+                              x2="100%" 
+                              y2="0" 
+                              stroke="#ef4444" 
+                              strokeWidth="2" 
+                            />
+                          </svg>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             <hr className="border-gray-200 mb-6" />
 

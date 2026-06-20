@@ -15,19 +15,21 @@ export async function getProductsBySection(section: string) {
   const snapshot = await getDocs(q);
 
   return snapshot.docs.map((doc) => {
-  const data = doc.data();
+    const data = doc.data();
 
-  return {
-    id: doc.id,
-    name: data.name,
-    price: data.price,
-    image: data.image,
-    category: data.category,
-    sections: data.sections,
-    inStock: data.inStock,
+    return {
+      id: doc.id,
+      name: data.name,
+      price: data.price,
+      image: data.image,
+      category: data.category,
+      sections: data.sections,
+      inStock: data.inStock,
+      sizeRange: data.sizeRange || "",
+      outOfStockSizes: data.outOfStockSizes || "",
 
-    // ✅ FIX: convert timestamp → string
-    createdAt: data.createdAt?.toDate?.().toISOString?.() || null,
-  };
-});
+      // ✅ FIX: convert timestamp → string
+      createdAt: data.createdAt?.toDate?.().toISOString?.() || null,
+    };
+  });
 }

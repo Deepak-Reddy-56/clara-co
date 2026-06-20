@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     const data = await req.json();
 
     const itemList = data.items
-      .map((i: any) => `• ${i.name} × ${i.quantity}`)
+      .map((i: any) => `• ${i.name}${i.size ? ` (Size: ${i.size})` : ""} × ${i.quantity}`)
       .join("\n");
 
     const message = `

@@ -19,6 +19,8 @@ export default function AddProductModal({ isOpen, onClose, onSave, availableSect
   const [inStock, setInStock] = useState(true);
   const [files, setFiles] = useState<File[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [sizeRange, setSizeRange] = useState("");
+  const [outOfStockSizes, setOutOfStockSizes] = useState("");
 
   if (!isOpen) return null;
 
@@ -38,6 +40,8 @@ export default function AddProductModal({ isOpen, onClose, onSave, availableSect
       sections,
       inStock,
       brandNewFiles: files,
+      sizeRange: category === "clothes" ? sizeRange : "",
+      outOfStockSizes: category === "clothes" ? outOfStockSizes : "",
     });
     setIsSaving(false);
     onClose();
@@ -133,6 +137,40 @@ export default function AddProductModal({ isOpen, onClose, onSave, availableSect
               </div>
             </div>
           </div>
+
+          {/* Sizes (Conditional for Clothes Category) */}
+          {category === "clothes" && (
+            <div style={{ display: "flex", gap: "16px" }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: "block", fontSize: "11px", fontWeight: 700, color: theme.textSoft, marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                  Size Range
+                </label>
+                <input 
+                  placeholder="e.g., 32-42 or S,M,L"
+                  value={sizeRange} onChange={e => setSizeRange(e.target.value)}
+                  style={{
+                    width: "100%", padding: "12px 14px", borderRadius: "8px",
+                    background: theme.inputBg, border: `1px solid ${theme.border}`, outline: "none",
+                    fontSize: "14px", color: theme.textBold, boxSizing: "border-box"
+                  }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: "block", fontSize: "11px", fontWeight: 700, color: theme.textSoft, marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                  Out of Stock Sizes
+                </label>
+                <input 
+                  placeholder="e.g., 40 or S"
+                  value={outOfStockSizes} onChange={e => setOutOfStockSizes(e.target.value)}
+                  style={{
+                    width: "100%", padding: "12px 14px", borderRadius: "8px",
+                    background: theme.inputBg, border: `1px solid ${theme.border}`, outline: "none",
+                    fontSize: "14px", color: theme.textBold, boxSizing: "border-box"
+                  }}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Image Upload Area with File Previews */}
           <div>

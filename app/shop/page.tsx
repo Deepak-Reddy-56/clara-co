@@ -15,6 +15,8 @@ type Product = {
   images?: string[];
   category?: string;
   inStock?: boolean;
+  sizeRange?: string;
+  outOfStockSizes?: string;
 };
 
 function ShopContent() {
@@ -41,6 +43,8 @@ function ShopContent() {
             images: d.images || [],
             category: (d.category || "clothes").toLowerCase(),
             inStock: d.inStock !== false,
+            sizeRange: d.sizeRange || "",
+            outOfStockSizes: d.outOfStockSizes || "",
           };
         });
 

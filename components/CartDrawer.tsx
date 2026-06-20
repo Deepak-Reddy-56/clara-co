@@ -28,16 +28,21 @@ export default function CartDrawer({ open, onClose }: any) {
             {cart.length === 0 && <p className="text-gray-500">Your cart is empty</p>}
 
             {cart.map((item) => (
-              <div key={item.id} className="flex gap-4 border-b pb-4 items-center">
+              <div key={item.size ? `${item.id}-${item.size}` : item.id} className="flex gap-4 border-b pb-4 items-center">
                 <img src={item.image || "https://placehold.co/80"} className="w-16 h-16 rounded object-cover" alt={item.name} />
                 <div className="flex-1">
                   <h3 className="font-semibold text-sm text-gray-900">{item.name}</h3>
-                  <p className="text-sm text-gray-500">₹{item.price.toFixed(2)}</p>
+                  {item.size && (
+                    <p className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded w-fit mt-1">
+                      Size: {item.size}
+                    </p>
+                  )}
+                  <p className="text-sm text-gray-500 mt-1">₹{item.price.toFixed(2)}</p>
 
                   <div className="flex items-center mt-2 border rounded-full w-fit overflow-hidden">
-                    <button onClick={() => decreaseQty(item.id)} className="px-3 py-1 hover:bg-gray-100">−</button>
+                    <button onClick={() => decreaseQty(item.id, item.size)} className="px-3 py-1 hover:bg-gray-100">−</button>
                     <span className="px-4 text-gray-900">{item.quantity}</span>
-                    <button onClick={() => increaseQty(item.id)} className="px-3 py-1 hover:bg-gray-100">+</button>
+                    <button onClick={() => increaseQty(item.id, item.size)} className="px-3 py-1 hover:bg-gray-100">+</button>
                   </div>
                 </div>
               </div>

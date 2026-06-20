@@ -8,14 +8,15 @@ export type CartItem = {
   price: number;
   image: string;
   quantity: number;
+  size?: string;
 };
 
 type CartContextType = {
   cart: CartItem[];
   addToCart: (product: Omit<CartItem, "quantity">) => void;
-  increaseQty: (id: string) => void; // ✅ FIXED
-  decreaseQty: (id: string) => void; // ✅ FIXED
-  removeFromCart: (id: string) => void; // ✅ FIXED
+  increaseQty: (id: string, size?: string) => void; // ✅ FIXED
+  decreaseQty: (id: string, size?: string) => void; // ✅ FIXED
+  removeFromCart: (id: string, size?: string) => void; // ✅ FIXED
   clearCart: () => void;
 };
 
@@ -44,11 +45,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addToCart = (product: Omit<CartItem, "quantity">) => {
     setCart((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
+      const existing = prev.find((item) => item.id === product.id && item.size === product.size);
 
       if (existing) {
         return prev.map((item) =>
-          item.id === product.id
+          (item.id === product.id && item.size === product.size)
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
@@ -58,21 +59,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const increaseQty = (id: string) => {
+  const increaseQty = (id: string, size?: string) => {
     setCart((prev) =>
       prev.map((item) =>
-        item.id === id
+        (item.id === id && item.size === size)
           ? { ...item, quantity: item.quantity + 1 }
           : item
       )
     );
   };
 
-  const decreaseQty = (id: string) => {
+  const decreaseQty = (id: string, size?: string) => {
     setCart((prev) =>
       prev
         .map((item) =>
-          item.id === id
+          (item.id === id && item.size === size)
             ? { ...item, quantity: item.quantity - 1 }
             : item
         )
@@ -80,8 +81,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  const removeFromCart = (id: string) => {
-    setCart((prev) => prev.filter((item) => item.id !== id));
+  const removeFromCart = (id: string, size?: string) => {
+    setCart((prev) => prev.filter((item) => !(item.id === id && item.size === size)));
   };
 
   const clearCart = () => setCart([]);

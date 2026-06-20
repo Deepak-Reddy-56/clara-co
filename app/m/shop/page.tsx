@@ -20,6 +20,9 @@ type Product = {
   discount?: number;
   sections?: string[];
   createdAt?: number;
+  category?: string;
+  sizeRange?: string;
+  outOfStockSizes?: string;
 };
 
 // ── SectionTitle helper ────────────────────────────────
@@ -86,6 +89,9 @@ export default function MobileShopPage() {
             discount: d.discount || 0,
             sections: d.sections || [],
             createdAt: d.createdAt?.toMillis?.() || d.createdAt?.seconds * 1000 || 0,
+            category: d.category || "",
+            sizeRange: d.sizeRange || "",
+            outOfStockSizes: d.outOfStockSizes || "",
           };
         });
 

@@ -8,6 +8,7 @@ type CartItem = {
   name: string;
   price: number;
   quantity: number;
+  size?: string;
 };
 
 type ShippingForm = {
@@ -82,6 +83,7 @@ export async function POST(req: Request) {
         name: productData.name,
         price: Math.round(realPrice * 100) / 100, // Use server price
         quantity: item.quantity,
+        size: item.size || "",
       });
 
       serverSubtotal += realPrice * item.quantity;

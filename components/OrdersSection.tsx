@@ -141,7 +141,7 @@ export default function OrdersSection() {
                         <div className="space-y-1.5">
                           {(order.items || []).map((item: any, i: number) => (
                             <div key={i} className="flex justify-between text-sm text-gray-700">
-                              <span>{item.name} × {item.quantity}</span>
+                              <span>{item.name}{item.size ? ` (Size: ${item.size})` : ""} × {item.quantity}</span>
                               <span>₹{((item.price ?? 0) * (item.quantity ?? 0)).toFixed(2)}</span>
                             </div>
                           ))}

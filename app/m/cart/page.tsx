@@ -32,7 +32,7 @@ export default function CartPage() {
         <>
           {cart.map((item) => (
             <div
-              key={item.id}
+              key={item.size ? `${item.id}-${item.size}` : item.id}
               style={{
                 display: "flex",
                 gap: "12px",
@@ -57,7 +57,13 @@ export default function CartPage() {
                   {item.name}
                 </p>
 
-                <p style={{ color: "#444", fontSize: "14px" }}>
+                {item.size && (
+                  <p style={{ color: "#555", fontSize: "12px", background: "#f5f5f5", padding: "2px 6px", borderRadius: "4px", width: "fit-content", marginTop: "2px" }}>
+                    Size: {item.size}
+                  </p>
+                )}
+
+                <p style={{ color: "#444", fontSize: "14px", marginTop: "4px" }}>
                   ₹{item.price}
                 </p>
 
@@ -70,7 +76,7 @@ export default function CartPage() {
                   }}
                 >
                   <button
-                    onClick={() => decreaseQty(item.id)}
+                    onClick={() => decreaseQty(item.id, item.size)}
                     style={btnSmall}
                   >
                     −
@@ -79,7 +85,7 @@ export default function CartPage() {
                   <span style={qtyStyle}>{item.quantity}</span>
 
                   <button
-                    onClick={() => increaseQty(item.id)}
+                    onClick={() => increaseQty(item.id, item.size)}
                     style={btnSmall}
                   >
                     +
@@ -87,7 +93,7 @@ export default function CartPage() {
                 </div>
 
                 <button
-                  onClick={() => removeFromCart(item.id)}
+                  onClick={() => removeFromCart(item.id, item.size)}
                   style={{
                     marginTop: "6px",
                     fontSize: "12px",

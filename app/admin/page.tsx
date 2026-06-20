@@ -30,6 +30,8 @@ type Product = {
   sections: string[];
   discount?: number;
   images?: string[];
+  sizeRange?: string;
+  outOfStockSizes?: string;
 };
 
 type OrderStatus = "PENDING" | "PAID" | "SHIPPED" | "DELIVERED";
@@ -38,6 +40,7 @@ type OrderItem = {
   name?: string;
   price?: number;
   quantity?: number;
+  size?: string;
 };
 
 type ShippingDetails = {
@@ -419,6 +422,8 @@ export default function AdminPage() {
         sections: data.sections,
         image: newUrls.length > 0 ? newUrls[0] : "",
         images: newUrls,
+        sizeRange: data.sizeRange || "",
+        outOfStockSizes: data.outOfStockSizes || "",
         createdAt: serverTimestamp(),
       };
 
@@ -603,6 +608,35 @@ export default function AdminPage() {
                       </select>
                     </div>
 
+                    {product.category === "clothes" && (
+                      <div className="flex gap-4">
+                        <div className="flex flex-col">
+                          <label className="text-xs font-bold text-gray-500 mb-1">Size Range</label>
+                          <input
+                            type="text"
+                            placeholder="32-42"
+                            className="border p-2 rounded w-44 text-sm"
+                            value={product.sizeRange || ""}
+                            onChange={(e) =>
+                              updateField(product.id!, "sizeRange", e.target.value)
+                            }
+                          />
+                        </div>
+                        <div className="flex flex-col">
+                          <label className="text-xs font-bold text-gray-500 mb-1">Out of Stock Sizes</label>
+                          <input
+                            type="text"
+                            placeholder="40"
+                            className="border p-2 rounded w-44 text-sm"
+                            value={product.outOfStockSizes || ""}
+                            onChange={(e) =>
+                              updateField(product.id!, "outOfStockSizes", e.target.value)
+                            }
+                          />
+                        </div>
+                      </div>
+                    )}
+
                     <div className="flex gap-3 flex-wrap">
                       {(["new-arrivals", "top-selling", ...stylesList.map(s => s.slug)]).map(
                         (section) => (
@@ -690,7 +724,7 @@ export default function AdminPage() {
                           <p className="font-bold text-gray-700 mb-2">Order Items</p>
                           {(order.items || []).map((item, index) => (
                             <div key={index} className="flex justify-between text-gray-800">
-                              <span>{item.name || "Unnamed item"} x {item.quantity ?? 0}</span>
+                              <span>{item.name || "Unnamed item"}{item.size ? ` (Size: ${item.size})` : ""} x {item.quantity ?? 0}</span>
                               <span className="font-medium">₹{((item.price ?? 0) * (item.quantity ?? 0)).toFixed(0)}</span>
                             </div>
                           ))}

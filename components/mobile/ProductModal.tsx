@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { X } from "lucide-react";
+import { parseSizes } from "@/lib/products";
 
 interface Props {
   product: any;
@@ -19,6 +20,12 @@ export default function ProductModal({ product, onClose }: Props) {
 
   const { user } = useAuth();
   const { cart, addToCart, increaseQty, decreaseQty } = useCart();
+
+  const sizeOptions = product && product.category === "clothes" ? parseSizes(product.sizeRange, product.outOfStockSizes) : [];
+  const [selectedSize, setSelectedSize] = useState<string>(() => {
+    const firstAvailable = sizeOptions.find(s => s.isAvailable);
+    return firstAvailable ? firstAvailable.size : (sizeOptions[0]?.size || "");
+  });
 
   useEffect(() => {
     // Disable body scroll and overscroll-behavior to prevent page reload/pull-to-refresh
@@ -40,7 +47,7 @@ export default function ProductModal({ product, onClose }: Props) {
   if (!product) return null;
 
   const existingItem = cart.find(
-    (item) => item.id === String(product.id)
+    (item) => item.id === String(product.id) && item.size === (product.category === "clothes" ? selectedSize : undefined)
   );
 
   const discountedPrice =
@@ -179,6 +186,65 @@ export default function ProductModal({ product, onClose }: Props) {
             )}
             <p className="text-[12px] text-gray-600 mb-5 font-medium">Inclusive of all taxes</p>
 
+            {/* Sizes Selection */}
+            {product.category === "clothes" && sizeOptions.length > 0 && (
+              <div className="mb-6">
+                <span className="font-semibold text-gray-700 block mb-3 text-xs uppercase tracking-wider">Select Size</span>
+                <div className="flex flex-wrap gap-2.5">
+                  {sizeOptions.map((opt) => {
+                    const isSelected = selectedSize === opt.size;
+                    return (
+                      <button
+                        key={opt.size}
+                        disabled={!opt.isAvailable}
+                        onClick={() => setSelectedSize(opt.size)}
+                        style={{
+                          position: "relative",
+                          width: "40px",
+                          height: "40px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          border: isSelected ? "2px solid #000000" : "1px solid #cbd5e1",
+                          background: isSelected ? "#000000" : "#ffffff",
+                          color: isSelected ? "#ffffff" : "#0f172a",
+                          fontWeight: 700,
+                          fontSize: "13px",
+                          cursor: opt.isAvailable ? "pointer" : "not-allowed",
+                          transition: "all 0.15s ease",
+                          opacity: opt.isAvailable ? 1 : 0.45,
+                        }}
+                        className="rounded-lg shadow-sm"
+                      >
+                        {opt.size}
+                        
+                        {!opt.isAvailable && (
+                          <svg 
+                            style={{
+                              position: "absolute",
+                              inset: 0,
+                              width: "100%",
+                              height: "100%",
+                              pointerEvents: "none"
+                            }}
+                          >
+                            <line 
+                              x1="0" 
+                              y1="100%" 
+                              x2="100%" 
+                              y2="0" 
+                              stroke="#ef4444" 
+                              strokeWidth="2" 
+                            />
+                          </svg>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Stock indicator */}
             <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 mb-6">
               {product.inStock ? (
@@ -204,14 +270,14 @@ export default function ProductModal({ product, onClose }: Props) {
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center justify-between border-2 border-gray-200 rounded-full bg-gray-50 w-[140px] px-2 py-1.5 h-14" style={{color: "black"}}>
                 <button
-                  onClick={() => decreaseQty(existingItem.id)}
+                  onClick={() => decreaseQty(existingItem.id, existingItem.size)}
                   className="w-10 h-10 flex items-center justify-center text-xl font-bold bg-white rounded-full shadow-sm active:scale-90 transition-transform"
                 >
                   −
                 </button>
                 <span className="text-lg font-bold w-6 text-center">{existingItem.quantity}</span>
                 <button
-                  onClick={() => increaseQty(existingItem.id)}
+                  onClick={() => increaseQty(existingItem.id, existingItem.size)}
                   className="w-10 h-10 flex items-center justify-center text-xl font-bold bg-white rounded-full shadow-sm active:scale-90 transition-transform"
                 >
                   +
@@ -231,6 +297,7 @@ export default function ProductModal({ product, onClose }: Props) {
                   name: product.name,
                   price: discountedPrice || product.price,
                   image: product.image,
+                  size: product.category === "clothes" ? selectedSize : undefined,
                 })
               }
               disabled={!product.inStock}

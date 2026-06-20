@@ -15,6 +15,9 @@ type Product = {
   image: string;
   images?: string[];
   inStock?: boolean;
+  category?: string;
+  sizeRange?: string;
+  outOfStockSizes?: string;
 };
 
 function SearchContent() {
@@ -39,6 +42,9 @@ function SearchContent() {
             image: d.image || "",
             images: d.images || [],
             inStock: d.inStock !== false,
+            category: d.category || "",
+            sizeRange: d.sizeRange || "",
+            outOfStockSizes: d.outOfStockSizes || "",
           };
         });
 

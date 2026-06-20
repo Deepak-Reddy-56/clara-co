@@ -56,7 +56,7 @@ export default function OrderDetailsPage() {
       <div style={card}>
         {order.items?.map((item: any, i: number) => (
           <div key={i} style={{ marginBottom: "8px" }}>
-            {item.name} × {item.quantity}
+            {item.name}{item.size ? ` (Size: ${item.size})` : ""} × {item.quantity}
           </div>
         ))}
       </div>

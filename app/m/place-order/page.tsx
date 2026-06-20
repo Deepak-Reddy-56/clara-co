@@ -57,6 +57,7 @@ function PlaceOrderContent() {
             name: item.name,
             price: item.price,
             quantity: item.quantity,
+            size: item.size || "",
           })),
           shippingDetails: {
             name: address.fullName || "",

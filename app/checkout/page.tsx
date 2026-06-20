@@ -108,6 +108,7 @@ export default function CheckoutPage() {
             name: item.name,
             price: item.price,
             quantity: item.quantity,
+            size: item.size || "",
           })),
           shippingDetails: form,
         }),

@@ -24,10 +24,12 @@ type Product = {
   sections: string[];
   discount?: number;
   images?: string[];
+  sizeRange?: string;
+  outOfStockSizes?: string;
 };
 
 type OrderStatus = "PENDING" | "PAID" | "SHIPPED" | "DELIVERED";
-type OrderItem = { name?: string; price?: number; quantity?: number };
+type OrderItem = { name?: string; price?: number; quantity?: number; size?: string };
 type ShippingDetails = {
   name?: string; address?: string; city?: string; zip?: string;
   fullName?: string; street?: string; postal?: string; phone?: string;
@@ -360,6 +362,8 @@ export default function MobileAdminPage() {
         sections: data.sections,
         image: newUrls.length > 0 ? newUrls[0] : "",
         images: newUrls,
+        sizeRange: data.sizeRange || "",
+        outOfStockSizes: data.outOfStockSizes || "",
         createdAt: serverTimestamp(),
       };
 
@@ -607,6 +611,32 @@ export default function MobileAdminPage() {
                       </select>
                     </div>
 
+                    {/* Sizes (Conditional for Clothes) */}
+                    {product.category === "clothes" && (
+                      <div style={{ display: "flex", gap: "10px" }}>
+                        <div style={{ flex: 1 }}>
+                          <label style={{ fontSize: "11px", color: "#888", fontWeight: 600, display: "block", marginBottom: "4px" }}>Size Range</label>
+                          <input
+                            type="text"
+                            placeholder="32-42"
+                            style={{ ...inputSt }}
+                            value={product.sizeRange || ""}
+                            onChange={(e) => updateField(product.id!, "sizeRange", e.target.value)}
+                          />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <label style={{ fontSize: "11px", color: "#888", fontWeight: 600, display: "block", marginBottom: "4px" }}>Out of Stock Sizes</label>
+                          <input
+                            type="text"
+                            placeholder="40"
+                            style={{ ...inputSt }}
+                            value={product.outOfStockSizes || ""}
+                            onChange={(e) => updateField(product.id!, "outOfStockSizes", e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    )}
+
                     {/* Sections */}
                     <div>
                       <label style={{ fontSize: "11px", color: "#888", fontWeight: 600, display: "block", marginBottom: "8px" }}>Sections</label>
@@ -758,7 +788,7 @@ export default function MobileAdminPage() {
                       <p style={{ fontSize: "11px", fontWeight: 700, color: "#888", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Items</p>
                       {(order.items || []).map((item, i) => (
                         <div key={i} style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                          <span style={{ fontSize: "13px", color: "#111" }}>{item.name} × {item.quantity}</span>
+                          <span style={{ fontSize: "13px", color: "#111" }}>{item.name}{item.size ? ` (Size: ${item.size})` : ""} × {item.quantity}</span>
                           <span style={{ fontSize: "13px", fontWeight: 600, color: "#111" }}>
                             ₹{((item.price ?? 0) * (item.quantity ?? 0)).toFixed(0)}
                           </span>

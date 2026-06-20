@@ -5,10 +5,15 @@ import { useParams } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useCart } from "@/context/CartContext";
+import { parseSizes } from "@/lib/products";
 
 export default function ProductPage() {
   const { slug } = useParams();
   const [product, setProduct] = useState<any>(null);
+  const { addToCart } = useCart();
+  const [added, setAdded] = useState(false);
+  const [selectedSize, setSelectedSize] = useState<string>("");
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -26,6 +31,14 @@ export default function ProductPage() {
     fetchProduct();
   }, [slug]);
 
+  useEffect(() => {
+    if (product) {
+      const parsed = product.category === "clothes" ? parseSizes(product.sizeRange, product.outOfStockSizes) : [];
+      const firstAvailable = parsed.find(s => s.isAvailable);
+      setSelectedSize(firstAvailable ? firstAvailable.size : (parsed[0]?.size || ""));
+    }
+  }, [product]);
+
   if (!product) {
     return <div className="p-20 text-center text-gray-500">Loading...</div>;
   }
@@ -37,6 +50,20 @@ export default function ProductPage() {
 
   const images = product.images?.length > 0 ? product.images : (product.image ? [product.image] : ["https://via.placeholder.com/600x700?text=No+Image"]);
   const [activeImage, setActiveImage] = useState(0);
+
+  const sizeOptions = product && product.category === "clothes" ? parseSizes(product.sizeRange, product.outOfStockSizes) : [];
+
+  const handleAddToCart = () => {
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: discountedPrice || product.price,
+      image: product.image || (product.images && product.images[0]) || "",
+      size: product.category === "clothes" ? selectedSize : undefined,
+    });
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1200);
+  };
 
   return (
     <main className="min-h-screen bg-white text-gray-800 px-6 py-16">
@@ -123,11 +150,71 @@ export default function ProductPage() {
             <p className="text-red-600 font-semibold mb-4">Out of Stock</p>
           )}
 
+          {/* Sizes Selection */}
+          {product.category === "clothes" && sizeOptions.length > 0 && (
+            <div className="mb-6">
+              <span className="font-semibold text-gray-700 block mb-3 text-sm uppercase tracking-wider">Select Size</span>
+              <div className="flex flex-wrap gap-2.5">
+                {sizeOptions.map((opt) => {
+                  const isSelected = selectedSize === opt.size;
+                  return (
+                    <button
+                      key={opt.size}
+                      disabled={!opt.isAvailable}
+                      onClick={() => setSelectedSize(opt.size)}
+                      style={{
+                        position: "relative",
+                        width: "44px",
+                        height: "44px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        border: isSelected ? "2px solid #000000" : "1px solid #cbd5e1",
+                        background: isSelected ? "#000000" : "#ffffff",
+                        color: isSelected ? "#ffffff" : "#0f172a",
+                        fontWeight: 700,
+                        fontSize: "14px",
+                        cursor: opt.isAvailable ? "pointer" : "not-allowed",
+                        transition: "all 0.15s ease",
+                        opacity: opt.isAvailable ? 1 : 0.45,
+                      }}
+                      className="rounded-lg shadow-sm"
+                    >
+                      {opt.size}
+                      
+                      {!opt.isAvailable && (
+                        <svg 
+                          style={{
+                            position: "absolute",
+                            inset: 0,
+                            width: "100%",
+                            height: "100%",
+                            pointerEvents: "none"
+                          }}
+                        >
+                          <line 
+                            x1="0" 
+                            y1="100%" 
+                            x2="100%" 
+                            y2="0" 
+                            stroke="#ef4444" 
+                            strokeWidth="2" 
+                          />
+                        </svg>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <button
+            onClick={handleAddToCart}
             disabled={!product.inStock}
-            className="mt-4 bg-black text-white px-8 py-3 rounded-full font-semibold hover:opacity-90 disabled:bg-gray-400"
+            className="mt-4 bg-black text-white px-8 py-3 rounded-full font-semibold hover:opacity-90 disabled:bg-gray-400 transition"
           >
-            Add to Cart
+            {added ? "Added to Cart ✓" : "Add to Cart"}
           </button>
         </div>
 

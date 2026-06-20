@@ -13,6 +13,8 @@ type ProductCardProps = {
   inStock?: boolean;
   category?: string;
   sections?: string[];
+  sizeRange?: string;
+  outOfStockSizes?: string;
 };
 
 export default function ProductCard({
@@ -23,6 +25,9 @@ export default function ProductCard({
   images,
   discount,
   inStock = true,
+  category,
+  sizeRange,
+  outOfStockSizes,
 }: ProductCardProps) {
   const [open, setOpen] = useState(false);
 
@@ -83,7 +88,7 @@ export default function ProductCard({
       {/* QUICK VIEW MODAL */}
       {open && (
         <ProductModal
-          product={{ id, name, price, image, images, discount, inStock }}
+          product={{ id, name, price, image, images, discount, inStock, category, sizeRange, outOfStockSizes }}
           onClose={() => setOpen(false)}
         />
       )}

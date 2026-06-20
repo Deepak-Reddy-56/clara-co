@@ -183,8 +183,6 @@ export default function MobileShopPage() {
                   <ProductCard product={p} />
                 </div>
               ))}
-              {/* Spacer to preserve right padding on overflow-scroll */}
-              <div style={{ minWidth: "4px", flexShrink: 0 }} />
             </div>
           ) : fetched ? (
             <p style={{ padding: "0 16px", color: "#aaa", fontSize: "13px" }}>No new arrivals yet</p>
@@ -201,8 +199,6 @@ export default function MobileShopPage() {
                   <ProductCard product={p} />
                 </div>
               ))}
-              {/* Spacer to preserve right padding on overflow-scroll */}
-              <div style={{ minWidth: "4px", flexShrink: 0 }} />
             </div>
           ) : fetched ? (
             <p style={{ padding: "0 16px", color: "#aaa", fontSize: "13px" }}>No top sellers yet</p>

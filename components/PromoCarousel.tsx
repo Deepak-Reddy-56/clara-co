@@ -23,7 +23,8 @@ type PromoCarouselProps = {
 export default function PromoCarousel({ variant }: PromoCarouselProps) {
   const [data, setData] = useState<CarouselData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(1);
+  const [transitionEnabled, setTransitionEnabled] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -74,6 +75,13 @@ export default function PromoCarousel({ variant }: PromoCarouselProps) {
     fetchSettings();
   }, []);
 
+  // Initialize index when data becomes available
+  useEffect(() => {
+    if (data) {
+      setCurrentIndex(data.images.length > 1 ? 1 : 0);
+    }
+  }, [data]);
+
   // Autoplay Logic
   useEffect(() => {
     if (loading || !data || data.images.length <= 1 || isHovered) {
@@ -82,13 +90,23 @@ export default function PromoCarousel({ variant }: PromoCarouselProps) {
     }
 
     timerRef.current = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % data.images.length);
+      setCurrentIndex((prev) => prev + 1);
     }, 4000);
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [loading, data, isHovered]);
+
+  // Re-enable transition after seamless jump
+  useEffect(() => {
+    if (!transitionEnabled) {
+      const raf = requestAnimationFrame(() => {
+        setTransitionEnabled(true);
+      });
+      return () => cancelAnimationFrame(raf);
+    }
+  }, [transitionEnabled]);
 
   if (loading) {
     // Elegant Skeleton State
@@ -112,17 +130,38 @@ export default function PromoCarousel({ variant }: PromoCarouselProps) {
   }
 
   const images = data.images;
+  const hasMultiple = images.length > 1;
+  const slides = hasMultiple ? [images[images.length - 1], ...images, images[0]] : images;
 
-  const handlePrev = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+  const handleTransitionEnd = () => {
+    if (!hasMultiple) return;
+    if (currentIndex === 0) {
+      setTransitionEnabled(false);
+      setCurrentIndex(images.length);
+    } else if (currentIndex === images.length + 1) {
+      setTransitionEnabled(false);
+      setCurrentIndex(1);
+    }
   };
 
-  const handleNext = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setCurrentIndex((prev) => (prev + 1) % images.length);
+  const handlePrev = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (!hasMultiple || !transitionEnabled) return;
+    if (currentIndex < 1) return;
+    setCurrentIndex((prev) => prev - 1);
+  };
+
+  const handleNext = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (!hasMultiple || !transitionEnabled) return;
+    if (currentIndex > images.length) return;
+    setCurrentIndex((prev) => prev + 1);
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -139,10 +178,10 @@ export default function PromoCarousel({ variant }: PromoCarouselProps) {
     if (Math.abs(diff) > threshold) {
       if (diff > 0) {
         // Swiped left -> next
-        setCurrentIndex((prev) => (prev + 1) % images.length);
+        handleNext();
       } else {
         // Swiped right -> prev
-        setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+        handlePrev();
       }
     }
   };
@@ -221,10 +260,11 @@ export default function PromoCarousel({ variant }: PromoCarouselProps) {
             width: "100%",
             height: "100%",
             transform: `translateX(-${currentIndex * 100}%)`,
-            transition: "transform 0.55s ease-in-out",
+            transition: transitionEnabled ? "transform 0.55s ease-in-out" : "none",
           }}
+          onTransitionEnd={handleTransitionEnd}
         >
-          {images.map((banner, index) => {
+          {slides.map((banner, index) => {
             const isClickable = !!banner.link;
             const slideContent = (
               <div
@@ -339,22 +379,33 @@ export default function PromoCarousel({ variant }: PromoCarouselProps) {
               zIndex: 5,
             }}
           >
-            {images.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentIndex(i)}
-                style={{
-                  width: currentIndex === i ? "16px" : "6px",
-                  height: "6px",
-                  borderRadius: "999px",
-                  backgroundColor: currentIndex === i ? "#ffffff" : "rgba(255,255,255,0.5)",
-                  border: "none",
-                  padding: 0,
-                  cursor: "pointer",
-                  transition: "width 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s",
-                }}
-              />
-            ))}
+            {images.map((_, i) => {
+              const activeDot = currentIndex === 0 
+                ? images.length - 1 
+                : (currentIndex === images.length + 1 
+                    ? 0 
+                    : currentIndex - 1);
+              const isActive = activeDot === i;
+              return (
+                <button
+                  key={i}
+                  onClick={() => {
+                    if (!transitionEnabled) return;
+                    setCurrentIndex(i + 1);
+                  }}
+                  style={{
+                    width: isActive ? "16px" : "6px",
+                    height: "6px",
+                    borderRadius: "999px",
+                    backgroundColor: isActive ? "#ffffff" : "rgba(255,255,255,0.5)",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
+                    transition: "width 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s",
+                  }}
+                />
+              );
+            })}
           </div>
         )}
       </div>

@@ -598,8 +598,8 @@ export default function AdminPage() {
                         }
                       >
                         <option value="clothes">Clothes</option>
-                        <option value="phones">Phones</option>
-                        <option value="footwear">Footwear</option>
+                        <option value="goggles">Goggles</option>
+                        <option value="perfumes">Perfumes</option>
                       </select>
                     </div>
 

@@ -602,8 +602,8 @@ export default function MobileAdminPage() {
                       <select style={{ ...inputSt }} value={product.category}
                         onChange={(e) => updateField(product.id!, "category", e.target.value)}>
                         <option value="clothes">Clothes</option>
-                        <option value="footwear">Footwear</option>
-                        <option value="phones">Phones</option>
+                        <option value="goggles">Goggles</option>
+                        <option value="perfumes">Perfumes</option>
                       </select>
                     </div>
 

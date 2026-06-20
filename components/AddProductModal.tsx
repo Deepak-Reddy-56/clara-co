@@ -125,8 +125,8 @@ export default function AddProductModal({ isOpen, onClose, onSave, availableSect
               <select value={category} onChange={e => setCategory(e.target.value)}
                 style={{ width: "100%", padding: "12px 14px", paddingRight: "36px", borderRadius: "8px", background: theme.inputBg, border: `1px solid ${theme.border}`, outline: "none", fontSize: "14px", color: theme.textBold, appearance: "none", boxSizing: "border-box" }}>
                 <option value="clothes">Clothes</option>
-                <option value="phones">Phones</option>
-                <option value="footwear">Footwear</option>
+                <option value="goggles">Goggles</option>
+                <option value="perfumes">Perfumes</option>
               </select>
               <div style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none", display: "flex", color: theme.textSoft }}>
                 <ChevronDown size={16} />

@@ -39,39 +39,21 @@ export default function PromoCarousel({ variant }: PromoCarouselProps) {
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           const fetchedData = docSnap.data() as CarouselData;
-          // Filter out slots that have no URL
           const validImages = (fetchedData.images || []).filter(img => img && img.url);
-          setData({
-            sectionName: fetchedData.sectionName || "Featured Collections",
-            images: validImages,
-          });
-        } else {
-          // Default fallback images from Unsplash
-          setData({
-            sectionName: "Exclusive Drops",
-            images: [
-              {
-                url: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=1200",
-                link: "/shop",
-              },
-              {
-                url: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1200",
-                link: "/shop",
-              },
-              {
-                url: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=1000",
-                link: "/shop",
-              },
-            ],
-          });
+          if (validImages.length > 0) {
+            setData({
+              sectionName: fetchedData.sectionName || "Featured Collections",
+              images: validImages,
+            });
+          }
         }
+        // No fallback images — stay null/empty if no admin data
       } catch (err) {
         console.error("Failed to load promo carousel data:", err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchSettings();
   }, []);
 
@@ -109,17 +91,16 @@ export default function PromoCarousel({ variant }: PromoCarouselProps) {
   }, [transitionEnabled]);
 
   if (loading) {
-    // Elegant Skeleton State
+    // Clean blank placeholder — no flash of unrelated images
     return (
       <div
         style={{
           width: "100%",
           height: variant === "mobile-hero" ? "220px" : "100%",
           minHeight: variant === "desktop-hero" ? "450px" : "220px",
-          borderRadius: "16px",
-          background: "linear-gradient(90deg, #f3f3f3 25%, #e6e6e6 50%, #f3f3f3 75%)",
-          backgroundSize: "200% 100%",
-          animation: "shimmer 1.5s infinite linear",
+          borderRadius: variant === "mobile-hero" ? "20px" : "24px",
+          margin: variant === "mobile-hero" ? "0 16px 8px 16px" : undefined,
+          background: "#f5f5f5",
         }}
       />
     );
@@ -213,8 +194,8 @@ export default function PromoCarousel({ variant }: PromoCarouselProps) {
     <div style={{ display: "flex", flexDirection: "column", gap: "10px", width: "100%", height: "100%" }}>
       {/* Dynamic Section Header for Mobile (or Desktop if needed, but Myntra style is neat) */}
       {variant === "mobile-hero" && (
-        <div style={{ padding: "0 16px", marginTop: "4px" }}>
-          <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#1a1a1a", letterSpacing: "0.02em" }}>
+        <div style={{ padding: "0 16px", marginTop: "20px" }}>
+          <h3 style={{ fontSize: "20px", fontWeight: 800, color: "#1a1a1a", letterSpacing: "-0.01em", lineHeight: 1.2 }}>
             {data.sectionName}
           </h3>
         </div>

@@ -83,27 +83,51 @@ function normalizeShipping(d?: ShippingDetails) {
 // ── Styles ─────────────────────────────────────────────────
 
 const card: React.CSSProperties = {
-  background: "white", borderRadius: "14px",
-  border: "1px solid #eee", marginBottom: "12px",
+  background: "white",
+  borderRadius: "16px",
+  border: "1px solid #e2e8f0",
+  marginBottom: "12px",
   overflow: "hidden",
+  boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)",
 };
 
 const inputSt: React.CSSProperties = {
-  width: "100%", padding: "9px 12px", borderRadius: "8px",
-  border: "1px solid #e5e7eb", fontSize: "13px", outline: "none",
-  background: "white", boxSizing: "border-box",
+  width: "100%",
+  padding: "10px 14px",
+  borderRadius: "8px",
+  border: "1px solid #cbd5e1",
+  fontSize: "13px",
+  outline: "none",
+  background: "#f8fafc",
+  color: "#0f172a", // explicit dark contrast text
+  boxSizing: "border-box",
 };
 
 const pill = (active: boolean): React.CSSProperties => ({
-  padding: "4px 10px", borderRadius: "999px", fontSize: "12px", fontWeight: 600,
-  cursor: "pointer", border: active ? "1px solid black" : "1px solid #d1d5db",
-  background: active ? "black" : "white", color: active ? "white" : "#374151",
+  padding: "6px 14px",
+  borderRadius: "999px",
+  fontSize: "12px",
+  fontWeight: 700,
+  cursor: "pointer",
+  border: active ? "1px solid #0f172a" : "1px solid #cbd5e1",
+  background: active ? "#0f172a" : "#ffffff",
+  color: active ? "#ffffff" : "#475569",
+  transition: "all 0.15s ease",
 });
 
-const btn = (color = "black"): React.CSSProperties => ({
-  padding: "9px 16px", borderRadius: "999px", fontSize: "13px", fontWeight: 600,
-  background: color, color: "white", border: "none", cursor: "pointer",
-  display: "flex", alignItems: "center", gap: "6px",
+const btn = (color = "#0f172a"): React.CSSProperties => ({
+  padding: "10px 18px",
+  borderRadius: "999px",
+  fontSize: "13px",
+  fontWeight: 700,
+  background: color,
+  color: "white",
+  border: "none",
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
+  boxShadow: "0 2px 8px rgba(15, 23, 42, 0.08)",
 });
 
 // ── Main component ─────────────────────────────────────────
@@ -354,16 +378,25 @@ export default function MobileAdminPage() {
       </div>
 
       {/* ── Tabs ── */}
-      <div style={{ display: "flex", padding: "0 16px", gap: "8px", borderBottom: "1px solid #f0f0f0", background: "white" }}>
+      <div style={{ display: "flex", padding: "0 16px", gap: "12px", borderBottom: "1px solid #e2e8f0", background: "white" }}>
         {(["products", "orders", "carousel"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             style={{
-              padding: "12px 4px", fontSize: "13px", fontWeight: 600, cursor: "pointer",
-              background: "none", border: "none", color: tab === t ? "#111" : "#aaa",
-              borderBottom: tab === t ? "2px solid black" : "2px solid transparent",
-              display: "flex", alignItems: "center", gap: "6px", textTransform: "capitalize",
+              padding: "12px 4px",
+              fontSize: "13px",
+              fontWeight: 700,
+              cursor: "pointer",
+              background: "none",
+              border: "none",
+              color: tab === t ? "#0f172a" : "#64748b",
+              borderBottom: tab === t ? "2px solid #0f172a" : "2px solid transparent",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              textTransform: "capitalize",
+              transition: "all 0.15s ease",
             }}
           >
             {t === "products" ? <Package size={14} /> : t === "orders" ? <ShoppingBag size={14} /> : <Sliders size={14} />}
@@ -702,25 +735,28 @@ export default function MobileAdminPage() {
       {/* ══════════ CAROUSEL TAB ══════════ */}
       {tab === "carousel" && (
         <div style={{ padding: "16px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-            <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#111" }}>Homepage Carousel</h2>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+            <div>
+              <h2 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0, letterSpacing: "-0.01em" }}>Homepage Carousel</h2>
+              <p style={{ fontSize: "11px", color: "#64748b", margin: "2px 0 0 0" }}>Update home promo slider</p>
+            </div>
             <button
               onClick={saveCarouselSettings}
               disabled={carouselSaving || carouselLoading}
-              style={btn(carouselSaving ? "#9ca3af" : "#16a34a")}
+              style={btn(carouselSaving ? "#64748b" : "#0f172a")}
             >
               <Save size={14} /> {carouselSaving ? "Saving..." : "Save Settings"}
             </button>
           </div>
 
           {carouselLoading ? (
-            <p style={{ textAlign: "center", color: "#aaa", fontSize: "13px", padding: "40px" }}>Loading settings...</p>
+            <p style={{ textAlign: "center", color: "#64748b", fontSize: "13px", padding: "40px" }}>Loading settings...</p>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              {/* Section Name */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              {/* Section Name Card */}
               <div style={card}>
-                <div style={{ padding: "14px" }}>
-                  <label style={{ fontSize: "11px", color: "#888", fontWeight: 600, display: "block", marginBottom: "6px" }}>
+                <div style={{ padding: "16px" }}>
+                  <label style={{ fontSize: "11px", color: "#334155", fontWeight: 700, display: "block", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                     Section Title
                   </label>
                   <input
@@ -732,37 +768,44 @@ export default function MobileAdminPage() {
                 </div>
               </div>
 
-              {/* Banners */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                <p style={{ fontSize: "13px", fontWeight: 700, color: "#444" }}>Banner Images (Max 5)</p>
+              {/* Banners Manager */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                <p style={{ fontSize: "13px", fontWeight: 800, color: "#0f172a", margin: "0 0 4px 0", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                  Banner Images ({carouselImages.length}/5)
+                </p>
 
                 {carouselImages.map((image, index) => (
-                  <div key={index} style={{ ...card, padding: "12px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <div key={index} style={{ ...card, padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                    
+                    {/* Header Slot Info */}
                     <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                      {/* Preview */}
+                      {/* Image Preview */}
                       <div
                         style={{
                           width: "70px",
                           height: "50px",
-                          borderRadius: "8px",
+                          borderRadius: "10px",
                           backgroundImage: `url(${image.url || "https://via.placeholder.com/70"})`,
                           backgroundSize: "cover",
                           backgroundPosition: "center",
-                          backgroundColor: "#f5f5f5",
+                          backgroundColor: "#f1f5f9",
+                          border: "1px solid #cbd5e1",
                           flexShrink: 0,
                         }}
                       />
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: "12px", fontWeight: 600, color: "#111" }}>Banner Slot #{index + 1}</p>
-                        <p style={{ fontSize: "11px", color: "#aaa", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
-                          {image.url || "No image url set"}
+                        <p style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a", margin: 0 }}>Banner Slot #{index + 1}</p>
+                        <p style={{ fontSize: "11px", color: "#64748b", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", margin: "2px 0 0 0" }}>
+                          {image.url || "No image uploaded yet"}
                         </p>
                       </div>
                     </div>
 
-                    {/* Image URL Input / Upload */}
+                    {/* Image URL Input & File Upload */}
                     <div>
-                      <label style={{ fontSize: "10px", color: "#888", fontWeight: 600, display: "block", marginBottom: "4px" }}>Image Source</label>
+                      <label style={{ fontSize: "10px", color: "#475569", fontWeight: 700, display: "block", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                        Image Source
+                      </label>
                       <div style={{ display: "flex", gap: "8px" }}>
                         <input
                           style={{ ...inputSt, flex: 1 }}
@@ -775,8 +818,9 @@ export default function MobileAdminPage() {
                           }}
                         />
                         <label style={{
-                          padding: "8px 12px", background: "#f3f4f6", border: "1px solid #d1d5db", borderRadius: "8px",
-                          fontSize: "12px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center"
+                          padding: "10px 14px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px",
+                          fontSize: "12px", fontWeight: 700, color: "#334155", cursor: "pointer", display: "inline-flex",
+                          alignItems: "center", justifyContent: "center", userSelect: "none"
                         }}>
                           Upload
                           <input
@@ -801,15 +845,19 @@ export default function MobileAdminPage() {
                           />
                         </label>
                       </div>
-                      {uploadingCarouselIndex === index && <p style={{ fontSize: "11px", color: "#888", marginTop: "4px" }}>Uploading...</p>}
+                      {uploadingCarouselIndex === index && (
+                        <p style={{ fontSize: "11px", color: "#64748b", marginTop: "4px", margin: 0 }}>Uploading to Cloudinary...</p>
+                      )}
                     </div>
 
                     {/* Redirect link */}
                     <div>
-                      <label style={{ fontSize: "10px", color: "#888", fontWeight: 600, display: "block", marginBottom: "4px" }}>Redirect Link</label>
+                      <label style={{ fontSize: "10px", color: "#475569", fontWeight: 700, display: "block", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                        Redirect Link
+                      </label>
                       <input
                         style={inputSt}
-                        placeholder="e.g. /m/styles/casual"
+                        placeholder="e.g., /m/styles/casual"
                         value={image.link}
                         onChange={(e) => {
                           const updated = [...carouselImages];
@@ -819,9 +867,9 @@ export default function MobileAdminPage() {
                       />
                     </div>
 
-                    {/* Management buttons */}
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "4px" }}>
-                      <div style={{ display: "flex", gap: "6px" }}>
+                    {/* Management controls */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "4px", paddingTop: "8px", borderTop: "1px solid #f1f5f9" }}>
+                      <div style={{ display: "flex", gap: "8px" }}>
                         <button
                           disabled={index === 0}
                           onClick={() => {
@@ -832,11 +880,11 @@ export default function MobileAdminPage() {
                             setCarouselImages(updated);
                           }}
                           style={{
-                            padding: "4px 8px", background: "white", border: "1px solid #d1d5db", borderRadius: "4px",
-                            fontSize: "10px", fontWeight: 700, cursor: "pointer", opacity: index === 0 ? 0.3 : 1
+                            padding: "6px 12px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px",
+                            fontSize: "11px", fontWeight: 700, color: "#475569", cursor: "pointer", opacity: index === 0 ? 0.35 : 1
                           }}
                         >
-                          ▲ Move Up
+                          ▲ Up
                         </button>
                         <button
                           disabled={index === carouselImages.length - 1}
@@ -848,11 +896,11 @@ export default function MobileAdminPage() {
                             setCarouselImages(updated);
                           }}
                           style={{
-                            padding: "4px 8px", background: "white", border: "1px solid #d1d5db", borderRadius: "4px",
-                            fontSize: "10px", fontWeight: 700, cursor: "pointer", opacity: index === carouselImages.length - 1 ? 0.3 : 1
+                            padding: "6px 12px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px",
+                            fontSize: "11px", fontWeight: 700, color: "#475569", cursor: "pointer", opacity: index === carouselImages.length - 1 ? 0.35 : 1
                           }}
                         >
-                          ▼ Move Down
+                          ▼ Down
                         </button>
                       </div>
                       <button
@@ -860,8 +908,8 @@ export default function MobileAdminPage() {
                           setCarouselImages(carouselImages.filter((_, i) => i !== index));
                         }}
                         style={{
-                          padding: "4px 8px", background: "#fef2f2", color: "#b91c1c", border: "1px solid #fca5a5",
-                          borderRadius: "4px", fontSize: "10px", fontWeight: 700, cursor: "pointer"
+                          padding: "6px 12px", background: "#fee2e2", color: "#ef4444", border: "1px solid #fca5a5",
+                          borderRadius: "8px", fontSize: "11px", fontWeight: 700, cursor: "pointer"
                         }}
                       >
                         Delete
@@ -871,15 +919,16 @@ export default function MobileAdminPage() {
                 ))}
 
                 {carouselImages.length === 0 && (
-                  <p style={{ textAlign: "center", fontSize: "13px", color: "#aaa", padding: "16px" }}>No banners added yet.</p>
+                  <p style={{ textAlign: "center", fontSize: "13px", color: "#64748b", padding: "16px", margin: 0 }}>No banners added yet.</p>
                 )}
 
                 {carouselImages.length < 5 && (
                   <button
                     onClick={() => setCarouselImages([...carouselImages, { url: "", link: "" }])}
                     style={{
-                      padding: "12px", border: "2px dashed #ccc", borderRadius: "12px", background: "none",
-                      fontSize: "13px", fontWeight: 600, color: "#666", cursor: "pointer"
+                      padding: "14px", border: "1px dashed #cbd5e1", borderRadius: "12px", background: "#f8fafc",
+                      fontSize: "13px", fontWeight: 700, color: "#475569", cursor: "pointer", display: "flex",
+                      alignItems: "center", justifyContent: "center", gap: "6px", transition: "all 0.15s ease"
                     }}
                   >
                     + Add Banner Slot (Max 5)

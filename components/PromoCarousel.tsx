@@ -304,7 +304,7 @@ export default function PromoCarousel({ variant }: PromoCarouselProps) {
         </div>
 
         {/* Arrow Navigation (only shown when hovered on desktop) */}
-        {images.length > 1 && (
+        {images.length > 1 && variant === "desktop-hero" && (
           <>
             <button
               onClick={handlePrev}
@@ -323,7 +323,7 @@ export default function PromoCarousel({ variant }: PromoCarouselProps) {
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
-                opacity: isHovered || variant === "mobile-hero" ? 1 : 0,
+                opacity: isHovered ? 1 : 0,
                 transition: "opacity 0.25s, background-color 0.2s",
                 boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                 zIndex: 5,
@@ -352,7 +352,7 @@ export default function PromoCarousel({ variant }: PromoCarouselProps) {
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
-                opacity: isHovered || variant === "mobile-hero" ? 1 : 0,
+                opacity: isHovered ? 1 : 0,
                 transition: "opacity 0.25s, background-color 0.2s",
                 boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                 zIndex: 5,

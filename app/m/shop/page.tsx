@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Search, X } from "lucide-react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import ProductCard from "@/components/mobile/ProductCard";
 import PromoCarousel from "@/components/PromoCarousel";
@@ -22,14 +22,7 @@ type Product = {
   createdAt?: number;
 };
 
-// ── Static style data ──────────────────────────────────
-
-const STYLES = [
-  { name: "Casual",  slug: "casual", image: "https://images.unsplash.com/photo-1520975661595-6453be3f7070?q=80&w=800" },
-  { name: "Formal",  slug: "formal", image: "https://images.unsplash.com/photo-1516822003754-cca485356ecb?q=80&w=800" },
-  { name: "Party",   slug: "party",  image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=800" },
-  { name: "Gym",     slug: "gym",    image: "https://images.unsplash.com/photo-1517963879433-6ad2b056d712?q=80&w=800" },
-];
+// ── SectionTitle helper ────────────────────────────────
 
 function SectionTitle({ title, link }: { title: string; link?: string }) {
   return (
@@ -47,6 +40,34 @@ export default function MobileShopPage() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [fetched, setFetched]       = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+
+  const [stylesList, setStylesList] = useState<{ name: string; slug: string; image: string }[]>([]);
+  const [stylesSectionName, setStylesSectionName] = useState("Shop by Style");
+
+  useEffect(() => {
+    const loadStyles = async () => {
+      try {
+        const docRef = doc(db, "settings", "styles");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setStylesSectionName(data.sectionName || "Shop by Style");
+          setStylesList(data.styles || []);
+        } else {
+          // Fallback static list
+          setStylesList([
+            { name: "Casual", slug: "casual", image: "https://images.unsplash.com/photo-1520975661595-6453be3f7070?q=80&w=800" },
+            { name: "Formal", slug: "formal", image: "https://images.unsplash.com/photo-1516822003754-cca485356ecb?q=80&w=800" },
+            { name: "Party", slug: "party", image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=800" },
+            { name: "Gym", slug: "gym", image: "https://images.unsplash.com/photo-1517963879433-6ad2b056d712?q=80&w=800" }
+          ]);
+        }
+      } catch (err) {
+        console.error("Failed to load styles settings:", err);
+      }
+    };
+    loadStyles();
+  }, []);
 
   // Fetch all products once
   useEffect(() => {
@@ -207,9 +228,9 @@ export default function MobileShopPage() {
           )}
 
           {/* ── SHOP BY STYLE ── */}
-          <SectionTitle title="Shop by Style" link="/m/styles" />
+          <SectionTitle title={stylesSectionName} link={stylesList.length > 4 ? "/m/styles" : undefined} />
           <div className="style-grid">
-            {STYLES.map((style) => (
+            {stylesList.slice(0, 4).map((style) => (
               <a
                 key={style.slug}
                 href={`/m/styles/${style.slug}`}

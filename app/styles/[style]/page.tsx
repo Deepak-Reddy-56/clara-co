@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import ProductCard from "@/components/ProductCard";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, getDocs, query, where, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 type Product = {
@@ -16,29 +16,6 @@ type Product = {
   inStock?: boolean;
 };
 
-const STYLE_META: Record<string, { label: string; image: string; description: string }> = {
-  casual: {
-    label: "Casual",
-    image: "https://images.unsplash.com/photo-1520975661595-6453be3f7070?q=80&w=1600",
-    description: "Everyday effortless looks — comfort meets cool.",
-  },
-  formal: {
-    label: "Formal",
-    image: "https://images.unsplash.com/photo-1516822003754-cca485356ecb?q=80&w=1600",
-    description: "Sharp, polished, and professional.",
-  },
-  party: {
-    label: "Party",
-    image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1600",
-    description: "Make every night unforgettable.",
-  },
-  gym: {
-    label: "Gym",
-    image: "https://images.unsplash.com/photo-1517963879433-6ad2b056d712?q=80&w=1600",
-    description: "Train harder, look better.",
-  },
-};
-
 export default function StylePage() {
   const params = useParams();
   const router = useRouter();
@@ -46,8 +23,63 @@ export default function StylePage() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [meta, setMeta] = useState<{ label: string; image: string; description: string } | null>(null);
+  const [metaLoading, setMetaLoading] = useState(true);
 
-  const meta = STYLE_META[style];
+  useEffect(() => {
+    if (!style) return;
+
+    const fetchMeta = async () => {
+      try {
+        const docRef = doc(db, "settings", "styles");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const found = (data.styles || []).find((s: any) => s.slug === style);
+          if (found) {
+            setMeta({
+              label: found.name,
+              image: found.image,
+              description: found.description || "",
+            });
+            return;
+          }
+        }
+        // Fallback for default categories if unconfigured
+        const fallbackMeta: Record<string, { label: string; image: string; description: string }> = {
+          casual: {
+            label: "Casual",
+            image: "https://images.unsplash.com/photo-1520975661595-6453be3f7070?q=80&w=1600",
+            description: "Everyday effortless looks — comfort meets cool.",
+          },
+          formal: {
+            label: "Formal",
+            image: "https://images.unsplash.com/photo-1516822003754-cca485356ecb?q=80&w=1600",
+            description: "Sharp, polished, and professional.",
+          },
+          party: {
+            label: "Party",
+            image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1600",
+            description: "Make every night unforgettable.",
+          },
+          gym: {
+            label: "Gym",
+            image: "https://images.unsplash.com/photo-1517963879433-6ad2b056d712?q=80&w=1600",
+            description: "Train harder, look better.",
+          },
+        };
+        if (fallbackMeta[style]) {
+          setMeta(fallbackMeta[style]);
+        }
+      } catch (err) {
+        console.error("Failed to load style metadata:", err);
+      } finally {
+        setMetaLoading(false);
+      }
+    };
+
+    fetchMeta();
+  }, [style]);
 
   useEffect(() => {
     if (!style) return;
@@ -75,6 +107,17 @@ export default function StylePage() {
 
     fetchProducts();
   }, [style]);
+
+  if (metaLoading) {
+    return (
+      <main className="min-h-screen bg-white text-gray-900">
+        <Header />
+        <div className="max-w-7xl mx-auto px-6 pt-24 text-center">
+          <p className="text-gray-400 text-sm animate-pulse">Loading style details...</p>
+        </div>
+      </main>
+    );
+  }
 
   if (!meta) {
     return (

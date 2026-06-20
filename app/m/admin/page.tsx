@@ -8,7 +8,7 @@ import {
   doc, getDoc, setDoc, serverTimestamp, orderBy, query,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { ChevronDown, ChevronUp, Plus, Save, Trash2, Package, ShoppingBag, LogOut, Sliders } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, Save, Trash2, Package, ShoppingBag, LogOut, Sliders, Tag } from "lucide-react";
 import AddProductModal from "@/components/AddProductModal";
 import { authFetch } from "@/lib/authClient";
 
@@ -47,7 +47,6 @@ type Order = {
 
 // ── Helpers ────────────────────────────────────────────────
 
-const SECTIONS = ["new-arrivals", "top-selling", "casual", "formal", "party", "gym"];
 const STATUS_OPTIONS: OrderStatus[] = ["PENDING", "PAID", "SHIPPED", "DELIVERED"];
 
 function statusColor(s?: string) {
@@ -137,7 +136,7 @@ export default function MobileAdminPage() {
   const router = useRouter();
 
   const [authorized, setAuthorized] = useState(false);
-  const [tab, setTab] = useState<"products" | "orders" | "carousel">("products");
+  const [tab, setTab] = useState<"products" | "orders" | "carousel" | "styles">("products");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // 🎠 Carousel States
@@ -146,6 +145,13 @@ export default function MobileAdminPage() {
   const [carouselLoading, setCarouselLoading] = useState(true);
   const [carouselSaving, setCarouselSaving] = useState(false);
   const [uploadingCarouselIndex, setUploadingCarouselIndex] = useState<number | null>(null);
+
+  // 🏷️ Styles Settings States
+  const [stylesSectionName, setStylesSectionName] = useState("");
+  const [stylesList, setStylesList] = useState<{ name: string; slug: string; image: string; description?: string }[]>([]);
+  const [stylesLoading, setStylesLoading] = useState(true);
+  const [stylesSaving, setStylesSaving] = useState(false);
+  const [uploadingStyleIndex, setUploadingStyleIndex] = useState<number | null>(null);
 
   // Load carousel settings
   useEffect(() => {
@@ -173,6 +179,35 @@ export default function MobileAdminPage() {
     loadCarousel();
   }, [authorized]);
 
+  // Load styles settings
+  useEffect(() => {
+    if (!authorized) return;
+    const loadStyles = async () => {
+      try {
+        const docRef = doc(db, "settings", "styles");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setStylesSectionName(data.sectionName || "");
+          setStylesList(data.styles || []);
+        } else {
+          setStylesSectionName("Shop by Style");
+          setStylesList([
+            { name: "Casual", slug: "casual", image: "https://images.unsplash.com/photo-1520975661595-6453be3f7070?q=80&w=800", description: "Everyday effortless looks" },
+            { name: "Formal", slug: "formal", image: "https://images.unsplash.com/photo-1516822003754-cca485356ecb?q=80&w=800", description: "Sharp and professional" },
+            { name: "Party", slug: "party", image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=800", description: "Stand out every night" },
+            { name: "Gym", slug: "gym", image: "https://images.unsplash.com/photo-1517963879433-6ad2b056d712?q=80&w=800", description: "Performance meets style" }
+          ]);
+        }
+      } catch (err) {
+        console.error("Failed to load styles settings:", err);
+      } finally {
+        setStylesLoading(false);
+      }
+    };
+    loadStyles();
+  }, [authorized]);
+
   const saveCarouselSettings = async () => {
     setCarouselSaving(true);
     try {
@@ -186,6 +221,31 @@ export default function MobileAdminPage() {
       alert("Error saving carousel settings: " + err.message);
     } finally {
       setCarouselSaving(false);
+    }
+  };
+
+  const saveStylesSettings = async () => {
+    setStylesSaving(true);
+    try {
+      const docRef = doc(db, "settings", "styles");
+      const cleanStyles = stylesList
+        .map(s => ({
+          name: s.name.trim(),
+          slug: s.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
+          image: s.image.trim(),
+          description: (s.description || "").trim()
+        }))
+        .filter(s => s.name !== "");
+
+      await setDoc(docRef, {
+        sectionName: stylesSectionName,
+        styles: cleanStyles,
+      });
+      alert("Styles settings saved successfully!");
+    } catch (err: any) {
+      alert("Error saving styles settings: " + err.message);
+    } finally {
+      setStylesSaving(false);
     }
   };
 
@@ -379,7 +439,7 @@ export default function MobileAdminPage() {
 
       {/* ── Tabs ── */}
       <div style={{ display: "flex", padding: "0 16px", gap: "12px", borderBottom: "1px solid #e2e8f0", background: "white" }}>
-        {(["products", "orders", "carousel"] as const).map((t) => (
+        {(["products", "orders", "carousel", "styles"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -399,8 +459,16 @@ export default function MobileAdminPage() {
               transition: "all 0.15s ease",
             }}
           >
-            {t === "products" ? <Package size={14} /> : t === "orders" ? <ShoppingBag size={14} /> : <Sliders size={14} />}
-            {t === "products" ? "Products" : t === "orders" ? "Orders" : "Carousel"}
+            {t === "products" ? (
+              <Package size={14} />
+            ) : t === "orders" ? (
+              <ShoppingBag size={14} />
+            ) : t === "carousel" ? (
+              <Sliders size={14} />
+            ) : (
+              <Tag size={14} />
+            )}
+            {t === "products" ? "Products" : t === "orders" ? "Orders" : t === "carousel" ? "Carousel" : "Styles"}
           </button>
         ))}
       </div>
@@ -543,11 +611,14 @@ export default function MobileAdminPage() {
                     <div>
                       <label style={{ fontSize: "11px", color: "#888", fontWeight: 600, display: "block", marginBottom: "8px" }}>Sections</label>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                        {SECTIONS.map((s) => (
-                          <button key={s} onClick={() => toggleSection(product.id!, s)} style={pill(product.sections?.includes(s))}>
-                            {s}
-                          </button>
-                        ))}
+                        {(["new-arrivals", "top-selling", ...stylesList.map((st) => st.slug)]).map((s) => {
+                          const displayName = s === "new-arrivals" ? "New Arrivals" : s === "top-selling" ? "Top Selling" : (stylesList.find(styleItem => styleItem.slug === s)?.name || s);
+                          return (
+                            <button key={s} onClick={() => toggleSection(product.id!, s)} style={pill(product.sections?.includes(s))}>
+                              {displayName}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
 
@@ -940,11 +1011,242 @@ export default function MobileAdminPage() {
         </div>
       )}
 
-      <AddProductModal 
+      {/* ══════════ STYLES TAB ══════════ */}
+      {tab === "styles" && (
+        <div style={{ padding: "16px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+            <div>
+              <h2 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0, letterSpacing: "-0.01em" }}>Homepage Styles</h2>
+              <p style={{ fontSize: "11px", color: "#64748b", margin: "2px 0 0 0" }}>Update homepage style sections</p>
+            </div>
+            <button
+              onClick={saveStylesSettings}
+              disabled={stylesSaving || stylesLoading}
+              style={btn(stylesSaving ? "#64748b" : "#0f172a")}
+            >
+              <Save size={14} /> {stylesSaving ? "Saving..." : "Save Settings"}
+            </button>
+          </div>
 
+          {stylesLoading ? (
+            <p style={{ textAlign: "center", color: "#64748b", fontSize: "13px", padding: "40px" }}>Loading settings...</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              {/* Section Name Card */}
+              <div style={card}>
+                <div style={{ padding: "16px" }}>
+                  <label style={{ fontSize: "11px", color: "#334155", fontWeight: 700, display: "block", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Section Title
+                  </label>
+                  <input
+                    style={inputSt}
+                    placeholder="e.g., Shop by Style"
+                    value={stylesSectionName}
+                    onChange={(e) => setStylesSectionName(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Styles List Manager */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                <p style={{ fontSize: "13px", fontWeight: 800, color: "#0f172a", margin: "0 0 4px 0", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                  Style Categories ({stylesList.length})
+                </p>
+
+                {stylesList.map((style, index) => {
+                  const currentSlug = style.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+                  return (
+                    <div key={index} style={{ ...card, padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                      
+                      {/* Header Info */}
+                      <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                        {/* Image Preview */}
+                        <div
+                          style={{
+                            width: "70px",
+                            height: "50px",
+                            borderRadius: "10px",
+                            backgroundImage: `url(${style.image || "https://via.placeholder.com/70"})`,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                            backgroundColor: "#f1f5f9",
+                            border: "1px solid #cbd5e1",
+                            flexShrink: 0,
+                          }}
+                        />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a", margin: 0 }}>
+                            {style.name || `Style Category #${index + 1}`}
+                          </p>
+                          <p style={{ fontSize: "11px", color: "#64748b", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", margin: "2px 0 0 0" }}>
+                            Slug: <code style={{ background: "#f1f5f9", padding: "2px 4px", borderRadius: "4px" }}>{currentSlug || "(auto-generated)"}</code>
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Style Name Input */}
+                      <div>
+                        <label style={{ fontSize: "10px", color: "#475569", fontWeight: 700, display: "block", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                          Style Name
+                        </label>
+                        <input
+                          style={inputSt}
+                          placeholder="e.g., Casual"
+                          value={style.name}
+                          onChange={(e) => {
+                            const updated = [...stylesList];
+                            updated[index].name = e.target.value;
+                            updated[index].slug = e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+                            setStylesList(updated);
+                          }}
+                        />
+                      </div>
+
+                      {/* Image Source & Upload */}
+                      <div>
+                        <label style={{ fontSize: "10px", color: "#475569", fontWeight: 700, display: "block", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                          Thumbnail Image
+                        </label>
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <input
+                            style={{ ...inputSt, flex: 1 }}
+                            placeholder="Image URL"
+                            value={style.image}
+                            onChange={(e) => {
+                              const updated = [...stylesList];
+                              updated[index].image = e.target.value;
+                              setStylesList(updated);
+                            }}
+                          />
+                          <label style={{
+                            padding: "10px 14px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px",
+                            fontSize: "12px", fontWeight: 700, color: "#334155", cursor: "pointer", display: "inline-flex",
+                            alignItems: "center", justifyContent: "center", userSelect: "none"
+                          }}>
+                            Upload
+                            <input
+                              type="file"
+                              accept="image/*"
+                              style={{ display: "none" }}
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                setUploadingStyleIndex(index);
+                                try {
+                                  const url = await uploadToCloudinary(file);
+                                  const updated = [...stylesList];
+                                  updated[index].image = url;
+                                  setStylesList(updated);
+                                } catch (err: any) {
+                                  alert("Upload failed: " + err.message);
+                                } finally {
+                                  setUploadingStyleIndex(null);
+                                }
+                              }}
+                            />
+                          </label>
+                        </div>
+                        {uploadingStyleIndex === index && (
+                          <p style={{ fontSize: "11px", color: "#64748b", marginTop: "4px", margin: 0 }}>Uploading to Cloudinary...</p>
+                        )}
+                      </div>
+
+                      {/* Description Input */}
+                      <div>
+                        <label style={{ fontSize: "10px", color: "#475569", fontWeight: 700, display: "block", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                          Description
+                        </label>
+                        <input
+                          style={inputSt}
+                          placeholder="e.g., Everyday effortless looks"
+                          value={style.description || ""}
+                          onChange={(e) => {
+                            const updated = [...stylesList];
+                            updated[index].description = e.target.value;
+                            setStylesList(updated);
+                          }}
+                        />
+                      </div>
+
+                      {/* Reordering and Deleting */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "4px", paddingTop: "8px", borderTop: "1px solid #f1f5f9" }}>
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <button
+                            disabled={index === 0}
+                            onClick={() => {
+                              const updated = [...stylesList];
+                              const temp = updated[index];
+                              updated[index] = updated[index - 1];
+                              updated[index - 1] = temp;
+                              setStylesList(updated);
+                            }}
+                            style={{
+                              padding: "6px 12px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px",
+                              fontSize: "11px", fontWeight: 700, color: "#475569", cursor: "pointer", opacity: index === 0 ? 0.35 : 1
+                            }}
+                          >
+                            ▲ Up
+                          </button>
+                          <button
+                            disabled={index === stylesList.length - 1}
+                            onClick={() => {
+                              const updated = [...stylesList];
+                              const temp = updated[index];
+                              updated[index] = updated[index + 1];
+                              updated[index + 1] = temp;
+                              setStylesList(updated);
+                            }}
+                            style={{
+                              padding: "6px 12px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px",
+                              fontSize: "11px", fontWeight: 700, color: "#475569", cursor: "pointer", opacity: index === stylesList.length - 1 ? 0.35 : 1
+                            }}
+                          >
+                            ▼ Down
+                          </button>
+                        </div>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Are you sure you want to delete "${style.name || "this style"}"?`)) {
+                              setStylesList(stylesList.filter((_, i) => i !== index));
+                            }
+                          }}
+                          style={{
+                            padding: "6px 12px", background: "#fee2e2", color: "#ef4444", border: "1px solid #fca5a5",
+                            borderRadius: "8px", fontSize: "11px", fontWeight: 700, cursor: "pointer"
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {stylesList.length === 0 && (
+                  <p style={{ textAlign: "center", fontSize: "13px", color: "#64748b", padding: "16px", margin: 0 }}>No styles configured.</p>
+                )}
+
+                <button
+                  onClick={() => setStylesList([...stylesList, { name: "", slug: "", image: "", description: "" }])}
+                  style={{
+                    padding: "14px", border: "1px dashed #cbd5e1", borderRadius: "12px", background: "#f8fafc",
+                    fontSize: "13px", fontWeight: 700, color: "#475569", cursor: "pointer", display: "flex",
+                    alignItems: "center", justifyContent: "center", gap: "6px", transition: "all 0.15s ease"
+                  }}
+                >
+                  + Add Style Category
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      <AddProductModal 
         isOpen={isAddModalOpen} 
         onClose={() => setIsAddModalOpen(false)} 
         onSave={handleAddProductSave} 
+        availableSections={stylesList.map((s) => s.slug)}
       />
     </div>
   );

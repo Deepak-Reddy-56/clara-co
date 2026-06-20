@@ -1,42 +1,88 @@
-import Link from "next/link";
+"use client";
 
-const STYLES = [
-  {
-    name: "Casual",
-    slug: "casual",
-    image: "https://images.unsplash.com/photo-1520975661595-6453be3f7070?q=80&w=1000",
-    description: "Everyday effortless looks",
-  },
-  {
-    name: "Formal",
-    slug: "formal",
-    image: "https://images.unsplash.com/photo-1516822003754-cca485356ecb?q=80&w=1000",
-    description: "Sharp and professional",
-  },
-  {
-    name: "Party",
-    slug: "party",
-    image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1000",
-    description: "Stand out every night",
-  },
-  {
-    name: "Gym",
-    slug: "gym",
-    image: "https://images.unsplash.com/photo-1517963879433-6ad2b056d712?q=80&w=1000",
-    description: "Performance meets style",
-  },
-];
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function MobileStylesPage() {
+  const [styles, setStyles] = useState<{ name: string; slug: string; image: string; description?: string }[]>([]);
+  const [sectionName, setSectionName] = useState("Shop by Style");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStyles = async () => {
+      try {
+        const docRef = doc(db, "settings", "styles");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setSectionName(data.sectionName || "Shop by Style");
+          setStyles(data.styles || []);
+        } else {
+          // Fallback static list
+          setStyles([
+            {
+              name: "Casual",
+              slug: "casual",
+              image: "https://images.unsplash.com/photo-1520975661595-6453be3f7070?q=80&w=1000",
+              description: "Everyday effortless looks",
+            },
+            {
+              name: "Formal",
+              slug: "formal",
+              image: "https://images.unsplash.com/photo-1516822003754-cca485356ecb?q=80&w=1000",
+              description: "Sharp and professional",
+            },
+            {
+              name: "Party",
+              slug: "party",
+              image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1000",
+              description: "Stand out every night",
+            },
+            {
+              name: "Gym",
+              slug: "gym",
+              image: "https://images.unsplash.com/photo-1517963879433-6ad2b056d712?q=80&w=1000",
+              description: "Performance meets style",
+            },
+          ]);
+        }
+      } catch (err) {
+        console.error("Failed to load styles list:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStyles();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="mobile-shop">
+        <div className="page-title animate-pulse">{sectionName}</div>
+        <p style={{ textAlign: "center", color: "#888", fontSize: "13px", marginTop: "-8px", marginBottom: "16px" }}>
+          Loading styles...
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px", padding: "0 4px" }}>
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} style={{ height: "140px", borderRadius: "16px", background: "#f1f5f9" }} className="animate-pulse" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mobile-shop">
-      <div className="page-title">Shop by Style</div>
+      <div className="page-title">{sectionName}</div>
       <p style={{ textAlign: "center", color: "#888", fontSize: "13px", marginTop: "-8px", marginBottom: "16px" }}>
         Find your look
       </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "12px", padding: "0 4px" }}>
-        {STYLES.map((style) => (
+        {styles.map((style) => (
           <Link
             key={style.slug}
             href={`/m/styles/${style.slug}`}

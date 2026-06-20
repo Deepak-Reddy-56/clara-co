@@ -5,11 +5,12 @@ type AddProductModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onSave: (productData: any) => Promise<void>;
+  availableSections?: string[];
 };
 
 const SECTIONS = ["new-arrivals", "top-selling", "casual", "formal", "party", "gym"];
 
-export default function AddProductModal({ isOpen, onClose, onSave }: AddProductModalProps) {
+export default function AddProductModal({ isOpen, onClose, onSave, availableSections }: AddProductModalProps) {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [discount, setDiscount] = useState("");
@@ -169,7 +170,7 @@ export default function AddProductModal({ isOpen, onClose, onSave }: AddProductM
           <div>
             <label style={{ display: "block", fontSize: "11px", fontWeight: 700, color: theme.textSoft, marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.06em" }}>Sections</label>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-              {SECTIONS.map(s => {
+              {(availableSections && availableSections.length > 0 ? ["new-arrivals", "top-selling", ...availableSections] : SECTIONS).map(s => {
                 const active = sections.includes(s);
                 return (
                   <button 

@@ -2,40 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProductsBySection } from "@/lib/getProductsBySection";
 import ProductCard from "@/components/mobile/ProductCard";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export const dynamic = "force-dynamic";
-
-const STYLE_META: Record<
-  string,
-  { label: string; image: string; description: string }
-> = {
-  casual: {
-    label: "Casual",
-    image:
-      "https://images.unsplash.com/photo-1520975661595-6453be3f7070?q=80&w=1000",
-    description: "Everyday effortless looks",
-  },
-  formal: {
-    label: "Formal",
-    image:
-      "https://images.unsplash.com/photo-1516822003754-cca485356ecb?q=80&w=1000",
-    description: "Sharp and professional",
-  },
-  party: {
-    label: "Party",
-    image:
-      "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1000",
-    description: "Stand out every night",
-  },
-  gym: {
-    label: "Gym",
-    image:
-      "https://images.unsplash.com/photo-1517963879433-6ad2b056d712?q=80&w=1000",
-    description: "Performance meets style",
-  },
-};
-
-const VALID = Object.keys(STYLE_META);
 
 export default async function StylePage({
   params,
@@ -44,9 +14,54 @@ export default async function StylePage({
 }) {
   const { slug } = await params;
 
-  if (!VALID.includes(slug)) return notFound();
+  // Dynamically load style settings from Firestore
+  const docRef = doc(db, "settings", "styles");
+  const docSnap = await getDoc(docRef);
+  let styleMeta = null;
 
-  const meta = STYLE_META[slug];
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+    const styles = data.styles || [];
+    const found = styles.find((s: any) => s.slug === slug);
+    if (found) {
+      styleMeta = {
+        label: found.name,
+        image: found.image,
+        description: found.description || "",
+      };
+    }
+  }
+
+  // Fallback metadata for original categories if not configured in DB
+  if (!styleMeta) {
+    const fallbackMeta: Record<string, { label: string; image: string; description: string }> = {
+      casual: {
+        label: "Casual",
+        image: "https://images.unsplash.com/photo-1520975661595-6453be3f7070?q=80&w=1000",
+        description: "Everyday effortless looks",
+      },
+      formal: {
+        label: "Formal",
+        image: "https://images.unsplash.com/photo-1516822003754-cca485356ecb?q=80&w=1000",
+        description: "Sharp and professional",
+      },
+      party: {
+        label: "Party",
+        image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1000",
+        description: "Stand out every night",
+      },
+      gym: {
+        label: "Gym",
+        image: "https://images.unsplash.com/photo-1517963879433-6ad2b056d712?q=80&w=1000",
+        description: "Performance meets style",
+      },
+    };
+    styleMeta = fallbackMeta[slug];
+  }
+
+  if (!styleMeta) return notFound();
+
+  const meta = styleMeta;
   const products = await getProductsBySection(slug);
 
   return (
